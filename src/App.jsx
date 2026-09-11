@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
+import DashboardPage from './pages/DashboardPage';
 
 export default function App() {
   const [activePage, setActivePage] = useState('home');
   const [navigationData, setNavigationData] = useState(null);
 
-  // Demo user state that can be toggled for testing both guest and authenticated views
+  // Default logged-in user: Agent Dele (PRD Persona 4)
   const [currentUser, setCurrentUser] = useState({
-    name: 'Alex Johnson',
-    email: 'alex.johnson@stayfinder.com',
-    role: 'host', // 'guest' | 'host' | 'admin'
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80',
+    name: 'Agent Dele Alabi',
+    email: 'dele.alabi@stayfinder.ng',
+    role: 'host', // 'host' (Landlord/Agent) | 'seeker' | 'admin'
+    agencyName: 'Premier Heritage Partners',
+    licenseNumber: 'LAG-REA-2024-88',
+    verifiedKYC: true,
+    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80',
   });
 
   const handleNavigate = (page, data = null) => {
@@ -23,10 +27,13 @@ export default function App() {
 
   const handleLogin = () => {
     setCurrentUser({
-      name: 'Alex Johnson',
-      email: 'alex.johnson@stayfinder.com',
+      name: 'Agent Dele Alabi',
+      email: 'dele.alabi@stayfinder.ng',
       role: 'host',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&h=120&q=80',
+      agencyName: 'Premier Heritage Partners',
+      licenseNumber: 'LAG-REA-2024-88',
+      verifiedKYC: true,
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80',
     });
   };
 
@@ -44,8 +51,8 @@ export default function App() {
         onSignup={handleLogin}
         onLogout={handleLogout}
         onSearchClick={() => handleNavigate('search')}
-        unreadNotifications={3}
-        savedCount={5}
+        unreadNotifications={2}
+        savedCount={3}
       />
 
       <main className="flex-1">
@@ -57,10 +64,18 @@ export default function App() {
           />
         )}
 
-        {activePage !== 'home' && (
+        {activePage === 'dashboard' && (
+          <DashboardPage
+            user={currentUser || { name: 'Guest User', role: 'guest' }}
+            initialTab={navigationData?.tab || 'viewings'}
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {activePage !== 'home' && activePage !== 'dashboard' && (
           <div className="max-w-4xl mx-auto px-4 py-16 text-center">
             <div className="bg-gray-50 border border-gray-200 rounded-3xl p-8 sm:p-12 shadow-sm">
-              <span className="inline-block px-3 py-1 bg-rose-100 text-rose-600 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
+              <span className="inline-block px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
                 Routing Preview
               </span>
               <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 capitalize">
@@ -79,9 +94,16 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => handleNavigate('home')}
-                  className="px-5 py-2.5 bg-rose-600 text-white rounded-xl font-semibold text-xs hover:bg-rose-700 transition"
+                  className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-semibold text-xs hover:bg-emerald-700 transition"
                 >
                   Back to Home
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleNavigate('dashboard')}
+                  className="px-5 py-2.5 bg-gray-900 text-white rounded-xl font-semibold text-xs hover:bg-black transition"
+                >
+                  View Dashboard
                 </button>
               </div>
             </div>
