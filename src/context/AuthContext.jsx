@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useState } from 'react';
 import { getStoredUser, loginUser, logoutUser } from '../services/authService';
 
 const AuthContext = createContext(null);
@@ -6,16 +6,16 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
 	const [user, setUser] = useState(getStoredUser);
 
-	const login = async (credentials) => {
+	const login = useCallback(async (credentials) => {
 		const authenticatedUser = await loginUser(credentials);
 		setUser(authenticatedUser);
 		return authenticatedUser;
-	};
+	}, []);
 
-	const logout = () => {
+	const logout = useCallback(() => {
 		logoutUser();
 		setUser(null);
-	};
+	}, []);
 
 	return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
 }

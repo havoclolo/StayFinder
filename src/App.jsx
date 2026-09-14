@@ -6,13 +6,27 @@ import LoginPage from './pages/LoginPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 function StayFinderApp() {
-  const { user: currentUser, logout } = useAuth();
-  const [activePage, setActivePage] = useState(currentUser ? 'home' : 'login');
+  const [activePage, setActivePage] = useState('login');
   const [navigationData, setNavigationData] = useState(null);
+  const { user: currentUser, logout } = useAuth();
+
+  useEffect(() => {
+    if (!currentUser) return undefined;
+
+    window.history.pushState({ stayFinderHome: true }, '', window.location.href);
+
+    const handleBrowserBack = () => {
+      logout();
+      setActivePage('login');
+      setNavigationData(null);
+    };
+
+    window.addEventListener('popstate', handleBrowserBack);
+    return () => window.removeEventListener('popstate', handleBrowserBack);
+  }, [currentUser, logout]);
 
   const handleNavigate = (page, data = null) => {
     console.log(`Navigating to: ${page}`, data);
-    window.history.pushState({ stayfinderPage: page }, '', window.location.href);
     setActivePage(page);
     setNavigationData(data);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -20,32 +34,9 @@ function StayFinderApp() {
 
   const handleLogout = () => {
     logout();
-    window.history.replaceState({ stayfinderPage: 'login' }, '', window.location.href);
     setActivePage('login');
     setNavigationData(null);
   };
-
-  useEffect(() => {
-    window.history.replaceState(
-      { stayfinderPage: currentUser ? 'home' : 'login' },
-      '',
-      window.location.href,
-    );
-
-    const handleBrowserBack = (event) => {
-      if (event.state?.stayfinderPage === 'login' || !event.state?.stayfinderPage) {
-        logout();
-        setActivePage('login');
-        setNavigationData(null);
-        return;
-      }
-
-      setActivePage(event.state.stayfinderPage);
-    };
-
-    window.addEventListener('popstate', handleBrowserBack);
-    return () => window.removeEventListener('popstate', handleBrowserBack);
-  }, [currentUser, logout]);
 
   if (!currentUser) {
     return <LoginPage initialMode="login" onNavigate={handleNavigate} />;
@@ -107,14 +98,7 @@ function StayFinderApp() {
                   <pre>{JSON.stringify(navigationData, null, 2)}</pre>
                 </div>
               )}
-              <div className="mt-6 flex justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-semibold text-xs hover:bg-emerald-700 transition"
-                >
-                  Back to Login
-                </button>
+              <div className="mt-6 flex justify-center">
                 <button
                   type="button"
                   onClick={() => handleNavigate('dashboard')}
