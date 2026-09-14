@@ -99,10 +99,10 @@ function StayFinderApp() {
               <div className="mt-6 flex justify-center gap-3">
                 <button
                   type="button"
-                  onClick={() => handleNavigate('home')}
+                  onClick={handleLogout}
                   className="px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-semibold text-xs hover:bg-emerald-700 transition"
                 >
-                  Back to Home
+                  Back to Login
                 </button>
                 <button
                   type="button"

@@ -38,14 +38,6 @@ export default function LoginPage({ onNavigate = () => {}, initialMode = 'login'
 				</section>
 
 				<section className="p-6 sm:p-10">
-					<button
-						type="button"
-						onClick={() => onNavigate('home')}
-						className="text-xs font-bold text-gray-500 transition hover:text-gray-900"
-					>
-						&larr; Back to home
-					</button>
-
 					<div className="mt-10">
 						<p className="text-xs font-black uppercase tracking-widest text-emerald-700">{initialMode === 'signup' ? 'Create account' : 'Member access'}</p>
 						<h2 className="mt-2 text-3xl font-black tracking-tight text-gray-900">Sign in to StayFinder</h2>
