@@ -2,21 +2,13 @@ import React, { useState } from 'react';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
+import LoginPage from './pages/LoginPage';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
-export default function App() {
-  const [activePage, setActivePage] = useState('home');
+function StayFinderApp() {
+  const [activePage, setActivePage] = useState('login');
   const [navigationData, setNavigationData] = useState(null);
-
-  // Default logged-in user: Agent Dele (PRD Persona 4)
-  const [currentUser, setCurrentUser] = useState({
-    name: 'Agent Dele Alabi',
-    email: 'dele.alabi@stayfinder.ng',
-    role: 'host', // 'host' (Landlord/Agent) | 'seeker' | 'admin'
-    agencyName: 'Premier Heritage Partners',
-    licenseNumber: 'LAG-REA-2024-88',
-    verifiedKYC: true,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80',
-  });
+  const { user: currentUser, logout } = useAuth();
 
   const handleNavigate = (page, data = null) => {
     console.log(`Navigating to: ${page}`, data);
@@ -25,21 +17,15 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleLogin = () => {
-    setCurrentUser({
-      name: 'Agent Dele Alabi',
-      email: 'dele.alabi@stayfinder.ng',
-      role: 'host',
-      agencyName: 'Premier Heritage Partners',
-      licenseNumber: 'LAG-REA-2024-88',
-      verifiedKYC: true,
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80',
-    });
+  const handleLogout = () => {
+    logout();
+    setActivePage('login');
+    setNavigationData(null);
   };
 
-  const handleLogout = () => {
-    setCurrentUser(null);
-  };
+  if (!currentUser) {
+    return <LoginPage initialMode="login" onNavigate={handleNavigate} />;
+  }
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans text-gray-900">
@@ -47,8 +33,8 @@ export default function App() {
         user={currentUser}
         activePage={activePage}
         onNavigate={handleNavigate}
-        onLogin={handleLogin}
-        onSignup={handleLogin}
+        onLogin={() => handleNavigate('login')}
+        onSignup={() => handleNavigate('login', { mode: 'signup' })}
         onLogout={handleLogout}
         onSearchClick={() => handleNavigate('search')}
         unreadNotifications={2}
@@ -57,11 +43,24 @@ export default function App() {
 
       <main className="flex-1">
         {activePage === 'home' && (
-          <HomePage
-            onNavigate={handleNavigate}
-            onSelectProperty={(id, property) => handleNavigate('property-detail', { id, property })}
-            onSearch={(searchParams) => handleNavigate('search', searchParams)}
-          />
+          <>
+            <div className="max-w-7xl mx-auto px-4 pt-4 sm:px-6 lg:px-8">
+              <button
+                type="button"
+                onClick={handleLogout}
+                aria-label="Back to login"
+                className="inline-flex items-center gap-2 text-xs font-bold text-gray-600 transition hover:text-gray-950"
+              >
+                <span aria-hidden="true" className="text-base">&larr;</span>
+                Back to login
+              </button>
+            </div>
+            <HomePage
+              onNavigate={handleNavigate}
+              onSelectProperty={(id, property) => handleNavigate('property-detail', { id, property })}
+              onSearch={(searchParams) => handleNavigate('search', searchParams)}
+            />
+          </>
         )}
 
         {activePage === 'dashboard' && (
@@ -72,7 +71,14 @@ export default function App() {
           />
         )}
 
-        {activePage !== 'home' && activePage !== 'dashboard' && (
+        {activePage === 'login' && (
+          <LoginPage
+            initialMode={navigationData?.mode || 'login'}
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {activePage !== 'home' && activePage !== 'dashboard' && activePage !== 'login' && (
           <div className="max-w-4xl mx-auto px-4 py-16 text-center">
             <div className="bg-gray-50 border border-gray-200 rounded-3xl p-8 sm:p-12 shadow-sm">
               <span className="inline-block px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
@@ -111,5 +117,13 @@ export default function App() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <StayFinderApp />
+    </AuthProvider>
   );
 }
