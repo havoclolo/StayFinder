@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
@@ -6,12 +6,13 @@ import LoginPage from './pages/LoginPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 function StayFinderApp() {
-  const [activePage, setActivePage] = useState('login');
-  const [navigationData, setNavigationData] = useState(null);
   const { user: currentUser, logout } = useAuth();
+  const [activePage, setActivePage] = useState(currentUser ? 'home' : 'login');
+  const [navigationData, setNavigationData] = useState(null);
 
   const handleNavigate = (page, data = null) => {
     console.log(`Navigating to: ${page}`, data);
+    window.history.pushState({ stayfinderPage: page }, '', window.location.href);
     setActivePage(page);
     setNavigationData(data);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -19,9 +20,32 @@ function StayFinderApp() {
 
   const handleLogout = () => {
     logout();
+    window.history.replaceState({ stayfinderPage: 'login' }, '', window.location.href);
     setActivePage('login');
     setNavigationData(null);
   };
+
+  useEffect(() => {
+    window.history.replaceState(
+      { stayfinderPage: currentUser ? 'home' : 'login' },
+      '',
+      window.location.href,
+    );
+
+    const handleBrowserBack = (event) => {
+      if (event.state?.stayfinderPage === 'login' || !event.state?.stayfinderPage) {
+        logout();
+        setActivePage('login');
+        setNavigationData(null);
+        return;
+      }
+
+      setActivePage(event.state.stayfinderPage);
+    };
+
+    window.addEventListener('popstate', handleBrowserBack);
+    return () => window.removeEventListener('popstate', handleBrowserBack);
+  }, [currentUser, logout]);
 
   if (!currentUser) {
     return <LoginPage initialMode="login" onNavigate={handleNavigate} />;
@@ -43,24 +67,11 @@ function StayFinderApp() {
 
       <main className="flex-1">
         {activePage === 'home' && (
-          <>
-            <div className="max-w-7xl mx-auto px-4 pt-4 sm:px-6 lg:px-8">
-              <button
-                type="button"
-                onClick={handleLogout}
-                aria-label="Back to login"
-                className="inline-flex items-center gap-2 text-xs font-bold text-gray-600 transition hover:text-gray-950"
-              >
-                <span aria-hidden="true" className="text-base">&larr;</span>
-                Back to login
-              </button>
-            </div>
-            <HomePage
-              onNavigate={handleNavigate}
-              onSelectProperty={(id, property) => handleNavigate('property-detail', { id, property })}
-              onSearch={(searchParams) => handleNavigate('search', searchParams)}
-            />
-          </>
+          <HomePage
+            onNavigate={handleNavigate}
+            onSelectProperty={(id, property) => handleNavigate('property-detail', { id, property })}
+            onSearch={(searchParams) => handleNavigate('search', searchParams)}
+          />
         )}
 
         {activePage === 'dashboard' && (
