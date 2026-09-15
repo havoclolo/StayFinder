@@ -3,6 +3,10 @@ import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import DashboardPage from './pages/DashboardPage';
 import LoginPage from './pages/LoginPage';
+import SearchPage from './pages/SearchPage';
+import PropertyDetailPage from './pages/PropertyDetailPage';
+import CreateListingPage from './pages/CreateListingPage';
+import AdminPage from './pages/AdminPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 function StayFinderApp() {
@@ -80,7 +84,27 @@ function StayFinderApp() {
           />
         )}
 
-        {activePage !== 'home' && activePage !== 'dashboard' && activePage !== 'login' && (
+        {activePage === 'search' && (
+          <SearchPage
+            initialFilters={navigationData || {}}
+            onNavigate={handleNavigate}
+            onSelectProperty={(id, property) => handleNavigate('property-detail', { id, property })}
+          />
+        )}
+
+        {activePage === 'property-detail' && (
+          <PropertyDetailPage
+            property={navigationData?.property}
+            openBooking={navigationData?.openBooking}
+            onNavigate={handleNavigate}
+          />
+        )}
+
+        {activePage === 'create-listing' && <CreateListingPage onNavigate={handleNavigate} />}
+
+        {activePage === 'admin' && <AdminPage onNavigate={handleNavigate} />}
+
+        {!['home', 'dashboard', 'login', 'search', 'property-detail', 'create-listing', 'admin'].includes(activePage) && (
           <div className="max-w-4xl mx-auto px-4 py-16 text-center">
             <div className="bg-gray-50 border border-gray-200 rounded-3xl p-8 sm:p-12 shadow-sm">
               <span className="inline-block px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold uppercase tracking-wider mb-4">

@@ -10,6 +10,15 @@ const demoUser = {
 	avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80',
 };
 
+const demoAdmin = {
+	name: 'StayFinder Operations',
+	role: 'admin',
+	agencyName: 'StayFinder Trust & Safety',
+	licenseNumber: 'OPS-VERIFIED',
+	verifiedKYC: true,
+	avatar: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=120&h=120&q=80',
+};
+
 export async function loginUser({ email, password }) {
 	const normalizedEmail = email.trim().toLowerCase();
 
@@ -21,7 +30,10 @@ export async function loginUser({ email, password }) {
 		throw new Error('Your password must contain at least 6 characters.');
 	}
 
-	const user = { ...demoUser, email: normalizedEmail };
+	const user = {
+		...(normalizedEmail.includes('admin') || normalizedEmail.includes('ops') ? demoAdmin : demoUser),
+		email: normalizedEmail,
+	};
 	window.localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
 	return user;
 }
