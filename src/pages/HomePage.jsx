@@ -105,11 +105,14 @@ export default function HomePage({
   return (
     <div className="min-h-screen bg-white flex flex-col font-sans">
       {/* 1. HERO SECTION & STRUCTURED REAL ESTATE SEARCH */}
-      <section className="relative bg-gradient-to-b from-gray-950 via-gray-900 to-gray-900 text-white pt-12 pb-24 px-4 sm:px-6 lg:px-8">
-        <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
-          <div className="absolute -top-32 left-1/4 w-[600px] h-[500px] bg-rose-600 rounded-full blur-[140px]" />
-          <div className="absolute top-24 right-1/4 w-[500px] h-[450px] bg-indigo-600 rounded-full blur-[140px]" />
-        </div>
+      <section
+        className="relative bg-cover bg-center text-white pt-12 pb-24 px-4 sm:px-6 lg:px-8"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=2200&q=85')",
+        }}
+      >
+        <div className="absolute inset-0 bg-gray-950/65 pointer-events-none" />
 
         <div className="relative max-w-5xl mx-auto text-center">
           {/* PRD Value Tag */}
