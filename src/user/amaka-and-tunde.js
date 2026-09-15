@@ -1,0 +1,32 @@
+export const amakaAndTunde = {
+  id: 'amaka-and-tunde',
+  label: 'Renter / Buyer',
+  names: ['Amaka', 'Tunde'],
+  goal: 'Find a property to rent or purchase within budget and preferred area.',
+  needs: [
+    'Detailed and accurate property information',
+    'Properties filtered by budget and preferred area',
+    'Verified listings',
+    'Real property photos',
+    'Transparent pricing and fees',
+    'A fast path from search to signed lease for renters',
+    'Title status and ownership information for buyers',
+    'Property size and neighborhood data',
+    'Comparable property information',
+    'A structured offer process for purchases',
+  ],
+  renterPriorities: [
+    'Move-in-ready properties',
+    'Verified listings',
+    'Real photos',
+    'Transparent pricing',
+    'Fast application and lease signing',
+  ],
+  buyerPriorities: [
+    'Title status',
+    'Property size',
+    'Neighborhood data',
+    'Comparable properties',
+    'Structured purchase offers',
+  ],
+};

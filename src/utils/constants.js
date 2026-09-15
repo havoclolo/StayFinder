@@ -17,6 +17,16 @@ export const PROPERTY_TYPES = [
   { id: 'luxury_villa', label: 'Villas & Mansions' },
 ];
 
+export const PROPERTY_CATEGORIES = [
+  { id: 'all', label: 'All homes' },
+  { id: 'apartment', label: 'Apartments' },
+  { id: 'detached_house', label: 'Detached homes' },
+  { id: 'duplex', label: 'Duplexes' },
+  { id: 'penthouse', label: 'Penthouses' },
+  { id: 'townhouse', label: 'Townhouses' },
+  { id: 'luxury_villa', label: 'Villas' },
+];
+
 export const MOCK_PROPERTIES = [
   {
     id: 'sf-201',
