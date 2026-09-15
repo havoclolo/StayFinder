@@ -1,12 +1,16 @@
 {
   "compilerOptions": {
-    "baseUrl": "./src",
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+    "jsx": "react-jsx",
+    "moduleResolution": "bundler",
     "paths": {
-      "components/*": ["components/*"],
-      "context/*": ["context/*"],
-      "pages/*": ["pages/*"],
-      "services/*": ["services/*"],
-      "utils/*": ["utils/*"]
+      "@/*": ["src/*"],
+      "components/*": ["src/components/*"],
+      "context/*": ["src/context/*"],
+      "pages/*": ["src/pages/*"],
+      "services/*": ["src/services/*"],
+      "utils/*": ["src/utils/*"]
     }
   },
   "include": ["src"]
