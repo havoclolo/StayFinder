@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { MOCK_PROPERTIES } from '../utils/constants';
 import { INITIAL_VIEWING_REQUESTS, INITIAL_OFFERS_APPLICATIONS } from '../services/viewingService';
 import { formatPrice } from '../utils/formatters';
+import { amakaAndTunde, mrsOkaforAndAgentDele, adminOps } from '../user';
 
 /**
  * DashboardPage Component
@@ -70,6 +71,8 @@ export default function DashboardPage({
 
   const pendingCount = viewings.filter((v) => v.status === 'pending').length;
   const underReviewAppsCount = applications.filter((a) => a.status === 'under_review').length;
+  const activePersona = personaView === 'agent' ? mrsOkaforAndAgentDele : amakaAndTunde;
+  const activePersonaItems = personaView === 'agent' ? activePersona.workflows : activePersona.needs;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900 pb-16">
@@ -286,6 +289,30 @@ export default function DashboardPage({
                 My Submitted Applications
               </button>
             </>
+          )}
+        </div>
+
+        {/* Persona requirements connected from src/user */}
+        <div className="max-w-7xl mx-auto mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-wider text-indigo-700">Active user profile</p>
+              <h2 className="mt-1 text-sm font-black text-gray-900">{activePersona.label}</h2>
+              <p className="mt-1 text-xs text-gray-600">{activePersona.goal}</p>
+            </div>
+            <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-indigo-700">{activePersona.id}</span>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {activePersonaItems.slice(0, 5).map((item) => (
+              <span key={item} className="rounded-lg bg-white px-2.5 py-1.5 text-[11px] font-semibold text-gray-700 shadow-xs">
+                {item}
+              </span>
+            ))}
+          </div>
+          {personaView === 'agent' && (
+            <div className="mt-3 border-t border-indigo-100 pt-3 text-[11px] text-indigo-900">
+              Admin/Ops requirements are also defined for the platform: {adminOps.responsibilities.slice(0, 3).join(' · ')}.
+            </div>
           )}
         </div>
       </header>
