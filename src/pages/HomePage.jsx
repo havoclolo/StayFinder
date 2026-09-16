@@ -7,6 +7,24 @@ import { PROPERTY_TYPES } from '../utils/constants';
 import { marketplaceStore } from '../services/marketplaceStore';
 import { useCurrency } from '../context/CurrencyContext';
 
+const userPersonas = [
+  {
+    title: 'Amaka & Tunde — Renter/Buyer',
+    description:
+      'Amaka and Tunde are looking for a property to rent or purchase. They want properties within their budget and preferred area, with detailed and accurate information. Renters prioritize move-in-ready properties, verified listings, real photos, transparent pricing, and a fast path from search to signed lease. Buyers have a longer decision cycle and need details such as title status, property size, neighborhood data, comparable properties, and a structured offer process.',
+  },
+  {
+    title: 'Mrs. Okafor & Agent Dele — Landlord/Seller/Agent',
+    description:
+      'Mrs. Okafor and Agent Dele are property owners and agents who manage one or multiple properties. They want a simple way to create and manage listings, upload quality photos, attract qualified leads, and organize viewing requests. Agents managing multiple listings need a dashboard to efficiently track properties, leads, and viewing requests instead of relying on a chat inbox.',
+  },
+  {
+    title: 'Admin/Ops',
+    description:
+      'Admin/Ops verifies listings and agents, moderates content, handles fraud reports, and resolves disputes.',
+  },
+];
+
 /**
  * HomePage Component (Real Estate Marketplace Edition)
  * Aligned with Emmanuel Eseyin's PRD 1.0:
@@ -366,7 +384,33 @@ export default function HomePage({
         </div>
       </section>
 
-      {/* 3. PROPERTY MARKETPLACE CATALOG */}
+      {/* 3. USER PERSONAS */}
+      <section className="bg-white py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-8">
+            <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold uppercase tracking-wider">
+              User Personas
+            </span>
+            <h2 className="mt-3 text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+              Who is StayFinder built for?
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {userPersonas.map((persona) => (
+              <div
+                key={persona.title}
+                className="bg-gray-50 border border-gray-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition"
+              >
+                <h3 className="text-lg font-bold text-gray-900 mb-3">{persona.title}</h3>
+                <p className="text-sm leading-relaxed text-gray-700">{persona.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 4. PROPERTY MARKETPLACE CATALOG */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
@@ -454,9 +498,39 @@ export default function HomePage({
           </div>
         )}
 
+        {/* 5. LANDLORD & AGENT CALLOUT (PRD: Property owners/agents efficient listing) */}
+        <div className="mt-16 rounded-3xl overflow-hidden bg-gradient-to-r from-gray-900 via-gray-950 to-slate-900 text-white p-8 sm:p-12 shadow-xl border border-gray-800">
+          <div className="max-w-2xl">
+            <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-500/20">
+              For Landlords, Sellers & Certified Agents
+            </span>
+            <h3 className="text-2xl sm:text-3xl font-black mt-3 tracking-tight">
+              List once. Reach serious, verified seekers without WhatsApp chaos.
+            </h3>
+            <p className="mt-3 text-xs sm:text-sm text-gray-300 leading-relaxed">
+              Stop answering endless unfiltered messages from unqualified leads. Manage scheduled viewings, review digital tenant/buyer applications, and close deals securely on StayFinder.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => onNavigate('create-listing')}
+                className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-gray-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-emerald-500/20 active:scale-95"
+              >
+                List Your Property
+              </button>
+              <button
+                type="button"
+                onClick={() => onNavigate('dashboard')}
+                className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl transition border border-white/20"
+              >
+                Agent / Host Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
       </main>
 
-      {/* 5. SLOT PICKER VIEWING MODAL */}
+      {/* 6. SLOT PICKER VIEWING MODAL */}
       {bookingSlotProperty && (
         <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <SlotPicker
@@ -472,7 +546,7 @@ export default function HomePage({
         </div>
       )}
 
-      {/* 6. QUICK VIEW MODAL */}
+      {/* 7. QUICK VIEW MODAL */}
       {quickViewProperty && (
         <QuickViewModal
           property={quickViewProperty}
@@ -488,7 +562,7 @@ export default function HomePage({
         />
       )}
 
-      {/* 7. FOOTER */}
+      {/* 8. FOOTER */}
       <Footer onNavigate={onNavigate} onLanguageClick={onLanguageClick} />
     </div>
   );
