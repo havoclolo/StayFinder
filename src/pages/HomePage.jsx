@@ -384,33 +384,7 @@ export default function HomePage({
         </div>
       </section>
 
-      {/* 3. USER PERSONAS */}
-      <section className="bg-white py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <span className="inline-block px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-extrabold uppercase tracking-wider">
-              User Personas
-            </span>
-            <h2 className="mt-3 text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
-              Who is StayFinder built for?
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {userPersonas.map((persona) => (
-              <div
-                key={persona.title}
-                className="bg-gray-50 border border-gray-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition"
-              >
-                <h3 className="text-lg font-bold text-gray-900 mb-3">{persona.title}</h3>
-                <p className="text-sm leading-relaxed text-gray-700">{persona.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 4. PROPERTY MARKETPLACE CATALOG */}
+      {/* 3. PROPERTY MARKETPLACE CATALOG */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
