@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { formatPrice } from '../utils/formatters';
+import { useCurrency } from '../context/CurrencyContext';
 
 /**
  * PropertyCard Component (Real Estate Edition)
@@ -17,6 +18,7 @@ export default function PropertyCard({
   onToggleFavorite = () => {},
   isFavorite = false,
 }) {
+  const { currency } = useCurrency();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLiked, setIsLiked] = useState(isFavorite);
   const [isAnimatingHeart, setIsAnimatingHeart] = useState(false);
@@ -173,7 +175,7 @@ export default function PropertyCard({
       <div className="mt-3 flex flex-col gap-1">
         <div className="flex items-baseline justify-between">
           <span className="text-lg font-black text-gray-900">
-            {formatPrice(property.price, property.listingType, property.tenure)}
+            {formatPrice(property.price, property.listingType, property.tenure, currency)}
           </span>
           <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
             Free Viewing

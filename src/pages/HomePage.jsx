@@ -1,9 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import PropertyCard from '../components/PropertyCard';
 import SlotPicker from '../components/SlotPicker';
 import QuickViewModal from '../components/QuickViewModal';
 import Footer from '../components/Footer';
-import { PROPERTY_TYPES, MOCK_PROPERTIES } from '../utils/constants';
+import { PROPERTY_TYPES } from '../utils/constants';
+import { marketplaceStore } from '../services/marketplaceStore';
+import { useCurrency } from '../context/CurrencyContext';
 
 /**
  * HomePage Component (Real Estate Marketplace Edition)
@@ -20,6 +22,16 @@ export default function HomePage({
   onSearch = () => {},
   onLanguageClick = () => {},
 }) {
+  const { currency } = useCurrency();
+  const [properties, setProperties] = useState(() => marketplaceStore.getListings());
+
+  useEffect(() => {
+    const unsub = marketplaceStore.subscribe(() => {
+      setProperties(marketplaceStore.getListings());
+    });
+    return unsub;
+  }, []);
+
   // Search Mode: 'rent' | 'buy'
   const [listingMode, setListingMode] = useState('rent');
   const [locationQuery, setLocationQuery] = useState('');
@@ -27,6 +39,7 @@ export default function HomePage({
   const [selectedBedrooms, setSelectedBedrooms] = useState('any');
   const [maxBudget, setMaxBudget] = useState('');
   const [verifiedOnly, setVerifiedOnly] = useState(true);
+  const currencySymbol = currency === 'NGN' ? '₦' : currency === 'GBP' ? '£' : currency === 'EUR' ? '€' : '$';
 
   // Active Modals
   const [bookingSlotProperty, setBookingSlotProperty] = useState(null);
@@ -35,7 +48,7 @@ export default function HomePage({
 
   // Filtered Properties Computation
   const filteredProperties = useMemo(() => {
-    return MOCK_PROPERTIES.filter((p) => {
+    return properties.filter((p) => {
       // 1. Listing Mode (Rent vs Buy)
       if (p.listingType !== listingMode) return false;
 
@@ -161,10 +174,21 @@ export default function HomePage({
           </div>
 
           {/* STRUCTURED SEARCH BAR */}
-          <div className="mt-6 bg-white rounded-3xl p-4 sm:p-5 text-gray-900 shadow-2xl border border-gray-100 max-w-4xl mx-auto text-left">
-            <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="mt-8 bg-white/95 rounded-[2rem] p-4 sm:p-5 text-gray-900 shadow-2xl border border-white/70 max-w-5xl mx-auto text-left backdrop-blur-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-1 mb-4">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-700">Search verified homes</p>
+                <p className="mt-1 text-xs text-gray-500">Find real, inspected properties across Nigeria.</p>
+              </div>
+              <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[10px] font-black text-emerald-800">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                {listingMode === 'rent' ? '70 homes for rent' : '100 homes for sale'}
+              </span>
+            </div>
+
+            <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.25fr_1fr_0.9fr_1.2fr_auto] gap-2.5">
               {/* Location */}
-              <div className="p-3 rounded-2xl border border-gray-200 hover:border-gray-900 transition">
+              <div className="min-h-[64px] p-3 rounded-2xl border border-gray-200 hover:border-emerald-500 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-100 transition">
                 <label className="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500">
                   Location / Area
                 </label>
@@ -178,7 +202,7 @@ export default function HomePage({
               </div>
 
               {/* Property Type */}
-              <div className="p-3 rounded-2xl border border-gray-200 hover:border-gray-900 transition">
+              <div className="min-h-[64px] p-3 rounded-2xl border border-gray-200 hover:border-emerald-500 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-100 transition">
                 <label className="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500">
                   Property Type
                 </label>
@@ -196,7 +220,7 @@ export default function HomePage({
               </div>
 
               {/* Bedrooms */}
-              <div className="p-3 rounded-2xl border border-gray-200 hover:border-gray-900 transition">
+              <div className="min-h-[64px] p-3 rounded-2xl border border-gray-200 hover:border-emerald-500 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-100 transition">
                 <label className="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500">
                   Bedrooms
                 </label>
@@ -213,39 +237,37 @@ export default function HomePage({
                 </select>
               </div>
 
-              {/* Budget & Search Submit */}
-              <div className="flex items-center gap-2">
-                <div className="flex-1 p-3 rounded-2xl border border-gray-200 hover:border-gray-900 transition">
-                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500">
-                    Max Budget ({listingMode === 'rent' ? '/mo' : 'Price'})
-                  </label>
-                  <div className="flex items-center mt-1">
-                    <span className="text-xs font-bold text-gray-500 mr-1">$</span>
-                    <input
-                      type="number"
-                      placeholder={listingMode === 'rent' ? '4000' : '900000'}
-                      value={maxBudget}
-                      onChange={(e) => setMaxBudget(e.target.value)}
-                      className="w-full text-xs font-bold text-gray-900 bg-transparent focus:outline-none"
-                    />
-                  </div>
+              {/* Budget */}
+              <div className="min-h-[64px] p-3 rounded-2xl border border-gray-200 hover:border-emerald-500 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-100 transition">
+                <label className="block text-[10px] font-extrabold uppercase tracking-wider text-gray-500">
+                  Max {listingMode === 'rent' ? 'Yearly Rent' : 'Purchase Price'}
+                </label>
+                <div className="flex items-center mt-1">
+                  <span className="text-xs font-black text-emerald-700 mr-1">{currencySymbol}</span>
+                  <input
+                    type="number"
+                    placeholder={listingMode === 'rent' ? '12,000,000' : '250,000,000'}
+                    value={maxBudget}
+                    onChange={(e) => setMaxBudget(e.target.value)}
+                    className="w-full text-xs font-bold text-gray-900 bg-transparent focus:outline-none"
+                  />
                 </div>
-
-                <button
-                  type="submit"
-                  className="h-full px-5 rounded-2xl bg-gray-900 hover:bg-black text-white font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-md active:scale-95"
-                >
-                  <svg className="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <circle cx="11" cy="11" r="8" />
-                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                  </svg>
-                  <span>Search</span>
-                </button>
               </div>
+
+              <button
+                type="submit"
+                className="min-h-[64px] px-5 rounded-2xl bg-gray-950 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-md active:scale-95"
+              >
+                <svg className="w-4 h-4 stroke-[2.5]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <span>Search</span>
+              </button>
             </form>
 
             {/* Anti-Scam Toggle */}
-            <div className="mt-3 pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
               <label className="flex items-center gap-2 font-bold text-gray-700 cursor-pointer">
                 <input
                   type="checkbox"
@@ -253,17 +275,15 @@ export default function HomePage({
                   onChange={(e) => setVerifiedOnly(e.target.checked)}
                   className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4"
                 />
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1.5">
                   <span className="text-emerald-700">🛡️ Only show verified listings</span>
-                  <span className="text-gray-400 font-normal">(Title deed & physical inspection verified)</span>
+                  <span className="text-gray-400 font-normal hidden md:inline">Title deed & physical inspection verified</span>
                 </span>
               </label>
 
-              <div className="flex items-center gap-2 text-gray-500 text-[11px]">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span>Zero viewing fees</span>
-                <span>·</span>
-                <span>Direct verified contacts</span>
+              <div className="flex flex-wrap items-center gap-2 text-gray-500 text-[11px]">
+                <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-bold text-emerald-700">₦0 viewing fees</span>
+                <span className="rounded-full bg-gray-100 px-2.5 py-1 font-bold text-gray-600">Direct verified contacts</span>
               </div>
             </div>
           </div>
@@ -399,36 +419,6 @@ export default function HomePage({
           </div>
         )}
 
-        {/* 4. LANDLORD & AGENT CALLOUT (PRD: Property owners/agents efficient listing) */}
-        <div className="mt-16 rounded-3xl overflow-hidden bg-gradient-to-r from-gray-900 via-gray-950 to-slate-900 text-white p-8 sm:p-12 shadow-xl border border-gray-800">
-          <div className="max-w-2xl">
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-500/20">
-              For Landlords, Sellers & Certified Agents
-            </span>
-            <h3 className="text-2xl sm:text-3xl font-black mt-3 tracking-tight">
-              List once. Reach serious, verified seekers without WhatsApp chaos.
-            </h3>
-            <p className="mt-3 text-xs sm:text-sm text-gray-300 leading-relaxed">
-              Stop answering endless unfiltered messages from unqualified leads. Manage scheduled viewings, review digital tenant/buyer applications, and close deals securely on StayFinder.
-            </p>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={() => onNavigate('create-listing')}
-                className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-gray-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-emerald-500/20 active:scale-95"
-              >
-                List Your Property
-              </button>
-              <button
-                type="button"
-                onClick={() => onNavigate('dashboard')}
-                className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl transition border border-white/20"
-              >
-                Agent / Host Dashboard
-              </button>
-            </div>
-          </div>
-        </div>
       </main>
 
       {/* 5. SLOT PICKER VIEWING MODAL */}

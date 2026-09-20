@@ -3,11 +3,22 @@
  * Formats pricing for Rent (monthly/annual) vs. Buy, dates, areas, and badges.
  */
 
-export function formatPrice(amount, listingType = 'rent', tenure = 'month', currency = 'USD') {
+const CURRENCY_RATES_FROM_NGN = {
+  NGN: 1,
+  USD: 1 / 1500,
+  GBP: 1 / 1900,
+  EUR: 1 / 1650,
+  CAD: 1 / 1100,
+};
+
+export function formatPrice(amount, listingType = 'rent', tenure = 'month', currency = 'NGN') {
   if (amount == null) return 'Price on Request';
 
   const symbol = currency === 'NGN' ? '₦' : currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : '$';
-  const formattedNumber = new Intl.NumberFormat('en-US').format(amount);
+  const convertedAmount = amount * (CURRENCY_RATES_FROM_NGN[currency] || 1);
+  const formattedNumber = new Intl.NumberFormat(currency === 'NGN' ? 'en-NG' : 'en-US', {
+    maximumFractionDigits: currency === 'NGN' ? 0 : 2,
+  }).format(convertedAmount);
 
   if (listingType === 'buy') {
     return `${symbol}${formattedNumber}`;

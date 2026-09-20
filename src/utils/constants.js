@@ -27,7 +27,7 @@ export const PROPERTY_CATEGORIES = [
   { id: 'luxury_villa', label: 'Villas' },
 ];
 
-export const MOCK_PROPERTIES = [
+const BASE_PROPERTIES = [
   {
     id: 'sf-201',
     title: 'Contemporary 3-Bedroom Serviced Waterfront Apartment',
@@ -289,4 +289,117 @@ export const MOCK_PROPERTIES = [
     ],
     amenities: ['Prepaid Meter', 'Fitted Kitchenette', 'Water Treatment', 'Fiber Internet Available'],
   },
+];
+
+const NIGERIAN_RENT_LOCATIONS = [
+  ['Lekki Phase 1, Lagos', 'Admiralty Way'],
+  ['Yaba, Lagos', 'Sabo'],
+  ['Wuse 2, Abuja', 'Aminu Kano Crescent'],
+  ['Gwarinpa, Abuja', 'Life Camp Road'],
+  ['Ikeja GRA, Lagos', 'Isaac John Street'],
+  ['Port Harcourt GRA, Rivers', 'Aba Road'],
+  ['Ibadan, Oyo', 'Bodija Estate'],
+  ['Victoria Island, Lagos', 'Ahmadu Bello Way'],
+];
+
+const NIGERIAN_BUY_LOCATIONS = [
+  ['Ikoyi, Lagos', 'Bourdillon Road'],
+  ['Banana Island, Lagos', 'Zone B Waterfront'],
+  ['Maitama, Abuja', 'Gana Street'],
+  ['Asokoro, Abuja', 'Lake Chad Crescent'],
+  ['Lekki Phase 1, Lagos', 'Chevron Drive'],
+  ['Victoria Island, Lagos', 'Ozumba Mbadiwe Avenue'],
+  ['Enugu, Enugu', 'Independence Layout'],
+  ['Ibadan, Oyo', 'Jericho GRA'],
+];
+
+const NIGERIAN_HOME_IMAGES = [
+  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1000&q=85',
+  'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1000&q=85',
+  'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1000&q=85',
+  'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=1000&q=85',
+  'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&w=1000&q=85',
+  'https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=1000&q=85',
+  'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1000&q=85',
+  'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=1000&q=85',
+];
+
+const NIGERIAN_LISTER_NAMES = [
+  'Adebayo Homes & Realty',
+  'Cedar Crest Properties',
+  'Prime Heritage Realty',
+  'Lagos Habitat Partners',
+  'Northbridge Homes Nigeria',
+  'Oakline Property Group',
+];
+
+const RENT_PROPERTY_TYPES = ['apartment', 'duplex', 'townhouse', 'detached_house'];
+const BUY_PROPERTY_TYPES = ['detached_house', 'duplex', 'townhouse', 'luxury_villa', 'apartment'];
+
+function createGeneratedListing(index, listingType) {
+  const isRent = listingType === 'rent';
+  const locations = isRent ? NIGERIAN_RENT_LOCATIONS : NIGERIAN_BUY_LOCATIONS;
+  const [location, neighborhood] = locations[index % locations.length];
+  const propertyType = (isRent ? RENT_PROPERTY_TYPES : BUY_PROPERTY_TYPES)[index % (isRent ? RENT_PROPERTY_TYPES.length : BUY_PROPERTY_TYPES.length)];
+  const bedrooms = isRent ? 1 + (index % 4) : 3 + (index % 4);
+  const homeLabel = propertyType === 'apartment' ? 'Apartment' : propertyType === 'duplex' ? 'Duplex' : propertyType === 'townhouse' ? 'Townhouse' : propertyType === 'luxury_villa' ? 'Luxury Villa' : 'Detached House';
+  const price = isRent
+    ? 1800000 + ((index * 475000) % 11200000)
+    : 95000000 + ((index * 28750000) % 880000000);
+  const image = NIGERIAN_HOME_IMAGES[index % NIGERIAN_HOME_IMAGES.length];
+  const listerName = NIGERIAN_LISTER_NAMES[index % NIGERIAN_LISTER_NAMES.length];
+
+  return {
+    id: `sf-${isRent ? 'rent' : 'buy'}-${String(index + 1).padStart(3, '0')}`,
+    title: `${bedrooms}-Bedroom ${homeLabel} in ${location.split(',')[0]}`,
+    listingType,
+    propertyType,
+    location,
+    neighborhood,
+    country: 'Nigeria',
+    price,
+    tenure: isRent ? 'year' : undefined,
+    annualEquivalent: isRent ? price : undefined,
+    bedrooms,
+    bathrooms: Math.max(2, bedrooms - 1),
+    areaSqM: (isRent ? 75 : 220) + ((index * 17) % (isRent ? 190 : 480)),
+    isVerified: true,
+    verificationTier: isRent ? 'physical_inspected' : 'title_verified',
+    verificationBadge: isRent ? 'Physically Inspected in Nigeria' : 'Title & Ownership Verified',
+    noViewingFees: true,
+    featured: index < 8,
+    lister: {
+      name: listerName,
+      type: index % 3 === 0 ? 'Verified Agent' : 'Verified Property Owner',
+      verifiedKYC: true,
+      licenseNumber: `LAG-REA-${2020 + (index % 7)}-${String(100 + index).slice(-3)}`,
+      avatar: `https://images.unsplash.com/photo-${index % 2 === 0 ? '1507003211169-0a1dd7228f2d' : '1494790108377-be9c29b29330'}?auto=format&fit=crop&w=120&h=120&q=80`,
+      phone: '+234 80' + String(10000000 + index).slice(-8),
+    },
+    images: [image, NIGERIAN_HOME_IMAGES[(index + 1) % NIGERIAN_HOME_IMAGES.length]],
+    description: `A well-presented Nigerian ${homeLabel.toLowerCase()} in ${neighborhood}, with practical layouts, reliable water supply, security, parking, and easy access to local roads and everyday amenities. Verified photos and viewing slots are available through StayFinder.`,
+    feeBreakdown: isRent
+      ? { rent: `₦${price.toLocaleString('en-NG')}/year`, viewingFee: '₦0 (Free verified viewing)' }
+      : { price: `₦${price.toLocaleString('en-NG')}`, viewingFee: '₦0 (Free verified inspection)' },
+    availableViewingSlots: [
+      { date: 'Saturday', times: ['10:00 AM', '01:00 PM', '03:30 PM'] },
+      { date: 'Sunday', times: ['11:00 AM', '02:00 PM'] },
+    ],
+    amenities: isRent
+      ? ['Gated Estate', 'Treated Water', 'Parking', 'Prepaid Meter', 'Security']
+      : ['Gated Estate', 'Borehole', 'Parking', 'Security', 'Serviced Road'],
+  };
+}
+
+const NORMALIZED_BASE_PROPERTIES = BASE_PROPERTIES.map((property, index) => ({
+  ...property,
+  country: 'Nigeria',
+  price: property.listingType === 'rent' ? [12000000, 0, 7200000, 15000000, 0, 3600000][index] : [0, 850000000, 0, 0, 620000000, 0][index],
+  tenure: property.listingType === 'rent' ? 'year' : property.tenure,
+}));
+
+export const MOCK_PROPERTIES = [
+  ...NORMALIZED_BASE_PROPERTIES,
+  ...Array.from({ length: 66 }, (_, index) => createGeneratedListing(index, 'rent')),
+  ...Array.from({ length: 98 }, (_, index) => createGeneratedListing(index, 'buy')),
 ];

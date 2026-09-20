@@ -1,113 +1,33 @@
 /**
  * Viewing & Application Service
- * Simulates backend operations for scheduled viewings, tenant applications,
- * and landlord/agent inbound interest management.
+ * Provides helpers for scheduled viewings, tenant applications,
+ * purchase offers, and digital leases, backed by marketplaceStore.
  */
+import { marketplaceStore } from './marketplaceStore';
 
-export const INITIAL_VIEWING_REQUESTS = [
-  {
-    id: 'view-301',
-    propertyId: 'sf-201',
-    propertyTitle: 'Contemporary 3-Bedroom Serviced Waterfront Apartment',
-    propertyLocation: 'Lekki Phase 1, Lagos',
-    propertyPrice: '$3,200/mo',
-    propertyImage: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=400&q=80',
-    seekerName: 'Amaka Nwosu',
-    seekerPhone: '+234 802 345 6789',
-    seekerEmail: 'amaka.nwosu@techcorp.io',
-    seekerRole: 'Senior Product Designer',
-    viewingMode: 'in_person',
-    date: 'Tomorrow',
-    time: '02:00 PM',
-    status: 'pending', // 'pending' | 'confirmed' | 'completed' | 'cancelled'
-    notes: 'Relocating closer to Admiralty Way for work. Move-in target is Nov 1st.',
-  },
-  {
-    id: 'view-302',
-    propertyId: 'sf-202',
-    propertyTitle: 'Modern 5-Bedroom Fully Detached Smart Duplex with Pool',
-    propertyLocation: 'Old Ikoyi, Lagos',
-    propertyPrice: '$850,000',
-    propertyImage: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=400&q=80',
-    seekerName: 'Tunde Balogun',
-    seekerPhone: '+234 809 112 2334',
-    seekerEmail: 'tunde.b@investments.ng',
-    seekerRole: 'Managing Partner',
-    viewingMode: 'in_person',
-    date: 'Saturday',
-    time: '10:00 AM',
-    status: 'confirmed',
-    notes: 'Buyer with approved financing. Interested in reviewing Governor’s Consent documents.',
-  },
-  {
-    id: 'view-303',
-    propertyId: 'sf-204',
-    propertyTitle: 'Luxury 2-Bedroom High-Rise Penthouse with Panoramic Views',
-    propertyLocation: 'Victoria Island, Lagos',
-    propertyPrice: '$2,600/mo',
-    propertyImage: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=400&q=80',
-    seekerName: 'Dr. Fatima Al-Hassan',
-    seekerPhone: '+234 818 776 5544',
-    seekerEmail: 'fatima.al@consultancy.org',
-    seekerRole: 'Healthcare Director',
-    viewingMode: 'virtual_video',
-    date: 'Friday',
-    time: '10:00 AM',
-    status: 'confirmed',
-    notes: 'Currently in Abuja, requesting WhatsApp video walkthrough of balcony and kitchen.',
-  },
-  {
-    id: 'view-304',
-    propertyId: 'sf-203',
-    propertyTitle: 'Brand New 4-Bedroom Semi-Detached House with BQ',
-    propertyLocation: 'Chevron, Lekki',
-    propertyPrice: '$1,800/mo',
-    propertyImage: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=400&q=80',
-    seekerName: 'Emeka & Grace Obi',
-    seekerPhone: '+234 803 999 8881',
-    seekerEmail: 'emeka.obi@logistics.com',
-    seekerRole: 'Operations Manager',
-    viewingMode: 'in_person',
-    date: 'Tomorrow',
-    time: '04:00 PM',
-    status: 'pending',
-    notes: 'Family of 4 looking for long-term lease. Verified employment letter available.',
-  },
-];
+export const INITIAL_VIEWING_REQUESTS = marketplaceStore.getViewings();
+export const INITIAL_OFFERS_APPLICATIONS = marketplaceStore.getApplications();
 
-export const INITIAL_OFFERS_APPLICATIONS = [
-  {
-    id: 'app-401',
-    propertyId: 'sf-201',
-    propertyTitle: 'Contemporary 3-Bedroom Serviced Waterfront Apartment',
-    propertyLocation: 'Lekki Phase 1, Lagos',
-    applicantName: 'Amaka Nwosu',
-    applicantEmail: 'amaka.nwosu@techcorp.io',
-    applicantPhone: '+234 802 345 6789',
-    type: 'rent_application',
-    proposedPrice: '$3,200/mo',
-    leaseDuration: '1 Year (Annual upfront option)',
-    proposedMoveIn: '2026-10-15',
-    employment: 'Senior Product Designer at Paystack (Verified)',
-    annualIncome: '$68,000 USD equivalent',
-    occupants: '1 Adult',
-    status: 'under_review', // 'under_review' | 'accepted' | 'countered' | 'rejected'
-    submittedAt: '2 hours ago',
-  },
-  {
-    id: 'app-402',
-    propertyId: 'sf-202',
-    propertyTitle: 'Modern 5-Bedroom Fully Detached Smart Duplex with Pool',
-    propertyLocation: 'Old Ikoyi, Lagos',
-    applicantName: 'Tunde Balogun',
-    applicantEmail: 'tunde.b@investments.ng',
-    applicantPhone: '+234 809 112 2334',
-    type: 'purchase_offer',
-    proposedPrice: '$830,000',
-    askingPrice: '$850,000',
-    closingTimeline: '30 Days',
-    financingMethod: 'Cash / Wire Transfer (Proof of Funds Verified)',
-    status: 'under_review',
-    submittedAt: 'Yesterday',
-  },
-];
+export const viewingService = {
+  getViewings: () => marketplaceStore.getViewings(),
+  createViewingRequest: (data) => marketplaceStore.createViewingRequest(data),
+  updateViewingStatus: (id, status) => marketplaceStore.updateViewingStatus(id, status),
+
+  getApplications: () => marketplaceStore.getApplications(),
+  submitRentalApplication: (data) => marketplaceStore.submitRentalApplication(data),
+  updateApplicationStatus: (id, status) => marketplaceStore.updateApplicationStatus(id, status),
+
+  getOffers: () => marketplaceStore.getOffers(),
+  submitPurchaseOffer: (data) => marketplaceStore.submitPurchaseOffer(data),
+  counterOrAcceptOffer: (id, action, amount, note) => marketplaceStore.counterOrAcceptOffer(id, action, amount, note),
+
+  getLeases: () => marketplaceStore.getLeases(),
+  signLeaseAndPay: (leaseId, signature, paymentDetails) => marketplaceStore.signLeaseAndPay(leaseId, signature, paymentDetails),
+
+  getDueDiligenceRooms: () => marketplaceStore.getDueDiligenceRooms(),
+  getDueDiligenceByOfferId: (offerId) => marketplaceStore.getDueDiligenceByOfferId(offerId),
+  updateDueDiligenceStage: (ddId, stageKey, status) => marketplaceStore.updateDueDiligenceStage(ddId, stageKey, status),
+  uploadDueDiligenceDocument: (ddId, doc) => marketplaceStore.uploadDueDiligenceDocument(ddId, doc),
+};
+
+export default viewingService;

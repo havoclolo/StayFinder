@@ -1,8 +1,18 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import PropertyCard from '../components/PropertyCard';
-import { MOCK_PROPERTIES, PROPERTY_TYPES } from '../utils/constants';
+import { PROPERTY_TYPES } from '../utils/constants';
+import { marketplaceStore } from '../services/marketplaceStore';
 
 export default function SearchPage({ initialFilters = {}, onSelectProperty = () => {}, onNavigate = () => {} }) {
+	const [properties, setProperties] = useState(() => marketplaceStore.getListings());
+
+	useEffect(() => {
+		const unsub = marketplaceStore.subscribe(() => {
+			setProperties(marketplaceStore.getListings());
+		});
+		return unsub;
+	}, []);
+
 	const [mode, setMode] = useState(initialFilters.mode || 'rent');
 	const [location, setLocation] = useState(initialFilters.location || '');
 	const [type, setType] = useState(initialFilters.type || 'all');
@@ -11,7 +21,7 @@ export default function SearchPage({ initialFilters = {}, onSelectProperty = () 
 	const [verifiedOnly, setVerifiedOnly] = useState(true);
 	const [saved, setSaved] = useState(new Set(['sf-201', 'sf-202']));
 
-	const results = useMemo(() => MOCK_PROPERTIES.filter((property) => {
+	const results = useMemo(() => properties.filter((property) => {
 		if (property.listingType !== mode || (verifiedOnly && !property.isVerified)) return false;
 		if (type !== 'all' && property.propertyType !== type) return false;
 		if (bedrooms !== 'any' && property.bedrooms < Number(bedrooms.replace('+', ''))) return false;
@@ -32,7 +42,7 @@ export default function SearchPage({ initialFilters = {}, onSelectProperty = () 
 	return (
 		<main className="min-h-screen bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
 			<div className="mx-auto max-w-7xl">
-				<p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">Amaka &amp; Tunde search</p>
+				<p className="text-xs font-black uppercase tracking-[0.2em] text-emerald-700">Property Seeker search</p>
 				<div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
 					<div><h1 className="text-3xl font-black tracking-tight text-gray-900">Find verified homes that fit.</h1><p className="mt-2 text-sm text-gray-500">Filter by budget and area, compare details, and move from viewing to offer.</p></div>
 					<button type="button" onClick={() => onNavigate('home')} className="text-left text-xs font-bold text-gray-600 underline">Back to marketplace</button>

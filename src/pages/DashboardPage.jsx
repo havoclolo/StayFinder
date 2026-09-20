@@ -1,619 +1,635 @@
-import React, { useState } from 'react';
-import { MOCK_PROPERTIES } from '../utils/constants';
-import { INITIAL_VIEWING_REQUESTS, INITIAL_OFFERS_APPLICATIONS } from '../services/viewingService';
+import React, { useState, useEffect } from 'react';
+import { marketplaceStore } from '../services/marketplaceStore';
 import { formatPrice } from '../utils/formatters';
-import { amakaAndTunde, mrsOkaforAndAgentDele, adminOps } from '../user';
+import { useCurrency } from '../context/CurrencyContext';
+import DigitalLeaseModal from '../components/DigitalLeaseModal';
+import DueDiligenceModal from '../components/DueDiligenceModal';
+import MessagingDrawer from '../components/MessagingDrawer';
 
-/**
- * DashboardPage Component
- * Dedicated workspace for:
- * - Mrs. Okafor (Landlord) & Agent Dele (Real Estate Agent) to manage listings,
- *   scheduled viewings, and digital tenant/buyer applications.
- * - Amaka & Tunde (Seekers) to track their booked viewings and offers.
- */
 export default function DashboardPage({
-  user = {
-    name: 'Agent Dele Alabi',
-    email: 'dele.alabi@lagosproperties.ng',
-    role: 'host', // 'host' | 'landlord' | 'guest'
-    agencyName: 'Premier Heritage Partners',
-    licenseNumber: 'LAG-REA-2024-88',
-    verifiedKYC: true,
-  },
+  user: propUser,
   initialTab = 'viewings',
   onNavigate = () => {},
 }) {
+  const { currency } = useCurrency();
+  const [currentUser, setCurrentUser] = useState(() => propUser || marketplaceStore.getCurrentUser());
   const [activeTab, setActiveTab] = useState(initialTab);
-  const [viewings, setViewings] = useState(INITIAL_VIEWING_REQUESTS);
-  const [applications, setApplications] = useState(INITIAL_OFFERS_APPLICATIONS);
-  const [properties, setProperties] = useState(MOCK_PROPERTIES);
-  const [viewingFilter, setViewingFilter] = useState('all'); // 'all' | 'pending' | 'confirmed'
-  const [personaView, setPersonaView] = useState('agent'); // 'agent' | 'seeker'
+  const [viewings, setViewings] = useState(marketplaceStore.getViewings());
+  const [applications, setApplications] = useState(marketplaceStore.getApplications());
+  const [leases, setLeases] = useState(marketplaceStore.getLeases());
+  const [offers, setOffers] = useState(marketplaceStore.getOffers());
+  const [listings, setListings] = useState(marketplaceStore.getListings());
+  const [dueDiligenceRooms, setDueDiligenceRooms] = useState(marketplaceStore.getDueDiligenceRooms());
 
-  // Notification / Alert message state
-  const [alertMessage, setAlertMessage] = useState(null);
+  // Active Modals
+  const [activeLeaseModal, setActiveLeaseModal] = useState(null);
+  const [activeDueDiligenceModal, setActiveDueDiligenceModal] = useState(null);
+  const [activeMessagingListingId, setActiveMessagingListingId] = useState(null);
+  const [alertMessage, setAlertMessage] = useState('');
+
+  useEffect(() => {
+    const unsub = marketplaceStore.subscribe(() => {
+      setCurrentUser(marketplaceStore.getCurrentUser() || propUser);
+      setViewings(marketplaceStore.getViewings());
+      setApplications(marketplaceStore.getApplications());
+      setLeases(marketplaceStore.getLeases());
+      setOffers(marketplaceStore.getOffers());
+      setListings(marketplaceStore.getListings());
+      setDueDiligenceRooms(marketplaceStore.getDueDiligenceRooms());
+    });
+    return unsub;
+  }, [propUser]);
+
+  const isSeeker = currentUser?.role === 'seeker';
+  const isLister = ['lister', 'landlord', 'agent', 'host'].includes(currentUser?.role);
 
   const showAlert = (msg) => {
     setAlertMessage(msg);
-    setTimeout(() => setAlertMessage(null), 3500);
+    setTimeout(() => setAlertMessage(''), 4000);
   };
 
-  // Confirm viewing slot action
+  // Lister Actions
   const handleConfirmViewing = (viewingId) => {
-    setViewings((prev) =>
-      prev.map((v) => (v.id === viewingId ? { ...v, status: 'confirmed' } : v))
-    );
-    showAlert('Viewing appointment confirmed! The seeker has been notified via email & SMS.');
+    marketplaceStore.updateViewingStatus(viewingId, 'confirmed');
+    showAlert('Viewing appointment confirmed! The exact unit address is now unlocked for the seeker.');
   };
 
-  // Cancel viewing slot
-  const handleCancelViewing = (viewingId) => {
-    setViewings((prev) =>
-      prev.map((v) => (v.id === viewingId ? { ...v, status: 'cancelled' } : v))
-    );
+  const handleDeclineViewing = (viewingId) => {
+    marketplaceStore.updateViewingStatus(viewingId, 'cancelled');
     showAlert('Viewing appointment cancelled.');
   };
 
-  // Accept tenant application / buyer offer
-  const handleAcceptApplication = (appId) => {
-    setApplications((prev) =>
-      prev.map((a) => (a.id === appId ? { ...a, status: 'accepted' } : a))
-    );
-    showAlert('Application accepted! Digital Lease Agreement has been dispatched to the tenant.');
+  const handleApproveApplication = (appId) => {
+    marketplaceStore.updateApplicationStatus(appId, 'approved');
+    showAlert('Application approved! Digital lease agreement generated for tenant e-signature.');
   };
 
-  // Filtered viewings
-  const filteredViewings = viewings.filter((v) => {
-    if (viewingFilter === 'pending') return v.status === 'pending';
-    if (viewingFilter === 'confirmed') return v.status === 'confirmed';
-    return true;
-  });
+  const handleAcceptOffer = (offerId) => {
+    marketplaceStore.counterOrAcceptOffer(offerId, 'accept', null, 'Seller accepted purchase offer.');
+    showAlert('Purchase offer accepted! 5-Stage Due Diligence Deal Room is now active.');
+  };
 
-  const pendingCount = viewings.filter((v) => v.status === 'pending').length;
-  const underReviewAppsCount = applications.filter((a) => a.status === 'under_review').length;
-  const activePersona = personaView === 'agent' ? mrsOkaforAndAgentDele : amakaAndTunde;
-  const activePersonaItems = personaView === 'agent' ? activePersona.workflows : activePersona.needs;
+  const handleCounterOffer = (offerId) => {
+    const counterAmt = prompt('Enter counter-offer amount ($ USD):', '835000');
+    if (counterAmt && !isNaN(Number(counterAmt))) {
+      marketplaceStore.counterOrAcceptOffer(offerId, 'counter', Number(counterAmt), `Counter offer of $${Number(counterAmt).toLocaleString()}`);
+      showAlert(`Counter-offer of $${Number(counterAmt).toLocaleString()} sent to buyer.`);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans text-gray-900 pb-16">
       {/* Alert Banner */}
       {alertMessage && (
-        <div className="sticky top-20 z-50 bg-emerald-600 text-white px-4 py-3 text-xs font-bold text-center shadow-lg transition-all flex items-center justify-center gap-2">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
-          </svg>
+        <div className="sticky top-24 z-40 bg-emerald-600 text-white px-4 py-3 text-xs font-bold text-center shadow-lg flex items-center justify-center gap-2 animate-fadeIn">
+          <span>✓</span>
           <span>{alertMessage}</span>
         </div>
       )}
 
-      {/* 1. DASHBOARD HEADER & PROFILE OVERVIEW */}
+      {/* DASHBOARD HEADER */}
       <header className="bg-white border-b border-gray-200 pt-8 pb-6 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-start gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-700 text-white font-black text-xl flex items-center justify-center shadow-md">
-              {user.name.charAt(0)}
-            </div>
+            <img
+              src={currentUser.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&h=120&q=80'}
+              alt={currentUser.name}
+              className="w-14 h-14 rounded-2xl object-cover shadow-sm border border-gray-200"
+            />
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
-                  {user.name}
+                  {currentUser.name}
                 </h1>
-                {user.verifiedKYC && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    <svg className="w-3 h-3 text-emerald-600 fill-current" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    <span>KYC Verified Lister</span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800">
+                  {currentUser.personaType ? `${currentUser.personaType.toUpperCase()}` : currentUser.role.toUpperCase()}
+                </span>
+                {currentUser.verifiedKYC && (
+                  <span className="text-emerald-600 text-xs font-bold flex items-center gap-0.5">
+                    ✓ Verified KYC
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {user.agencyName || 'Independent Property Owner'} · License: <span className="font-mono text-gray-700">{user.licenseNumber || 'VERIFIED-OWNER'}</span>
+              <p className="text-xs text-gray-500 mt-1">
+                {currentUser.headline || currentUser.email} · {currentUser.agencyName || 'StayFinder Verified Member'}
               </p>
             </div>
           </div>
 
-          {/* Action CTAs */}
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Persona Switcher Toggle (For testing Landlord vs Seeker experience) */}
-            <div className="flex items-center bg-gray-100 p-1 rounded-xl text-xs font-bold text-gray-600">
-              <button
-                type="button"
-                onClick={() => setPersonaView('agent')}
-                className={`px-3 py-1.5 rounded-lg transition ${
-                  personaView === 'agent' ? 'bg-white text-gray-900 shadow-xs' : 'hover:text-gray-900'
-                }`}
-              >
-                Agent / Owner Hub
-              </button>
-              <button
-                type="button"
-                onClick={() => setPersonaView('seeker')}
-                className={`px-3 py-1.5 rounded-lg transition ${
-                  personaView === 'seeker' ? 'bg-white text-gray-900 shadow-xs' : 'hover:text-gray-900'
-                }`}
-              >
-                My Seeker Activity
-              </button>
-            </div>
-
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              onClick={() => onNavigate('create-listing')}
-              className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold transition shadow-md shadow-emerald-600/20 flex items-center gap-2 active:scale-95"
+              onClick={() => setActiveMessagingListingId('sf-201')}
+              className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50 flex items-center gap-1.5 shadow-2xs"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
-              </svg>
-              <span>+ List New Property</span>
+              <span>💬</span> Messages
             </button>
+            {isLister && (
+              <button
+                type="button"
+                onClick={() => onNavigate('create-listing')}
+                className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white hover:bg-emerald-700 shadow-sm transition"
+              >
+                + Create New Listing
+              </button>
+            )}
+            {currentUser.role === 'admin' && (
+              <button
+                type="button"
+                onClick={() => onNavigate('admin')}
+                className="rounded-xl bg-rose-600 px-4 py-2 text-xs font-black text-white hover:bg-rose-700 shadow-sm"
+              >
+                Trust & Ops Center
+              </button>
+            )}
           </div>
         </div>
 
-        {/* 2. TOP KPI SUMMARY STATS (PRD Metrics) */}
-        {personaView === 'agent' ? (
-          <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
-            <div className="bg-gray-50/80 p-4 rounded-2xl border border-gray-200">
-              <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Active Properties</p>
-              <p className="text-2xl font-black text-gray-900 mt-1">{properties.length}</p>
-              <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">100% Verified &amp; Listed</p>
-            </div>
-
-            <div className="bg-gray-50/80 p-4 rounded-2xl border border-gray-200">
-              <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Viewing Requests</p>
-              <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-black text-gray-900">{viewings.length}</span>
-                {pendingCount > 0 && (
-                  <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
-                    {pendingCount} Pending
-                  </span>
-                )}
-              </div>
-              <p className="text-[11px] text-gray-500 mt-0.5">Zero WhatsApp chaos</p>
-            </div>
-
-            <div className="bg-gray-50/80 p-4 rounded-2xl border border-gray-200">
-              <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Offers &amp; Applications</p>
-              <p className="text-2xl font-black text-gray-900 mt-1">{applications.length}</p>
-              <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">2 Ready for Lease</p>
-            </div>
-
-            <div className="bg-gray-50/80 p-4 rounded-2xl border border-gray-200">
-              <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Viewing-to-Offer Rate</p>
-              <p className="text-2xl font-black text-emerald-600 mt-1">25%</p>
-              <p className="text-[11px] text-gray-500 mt-0.5">Target: &gt;15% (PRD Metric)</p>
-            </div>
-          </div>
-        ) : (
-          <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
-            <div className="bg-emerald-50/60 p-4 rounded-2xl border border-emerald-100">
-              <p className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">My Scheduled Viewings</p>
-              <p className="text-2xl font-black text-emerald-900 mt-1">2 Tours</p>
-              <p className="text-[11px] text-emerald-700 mt-0.5">1 In-Person · 1 Virtual Tour</p>
-            </div>
-            <div className="bg-indigo-50/60 p-4 rounded-2xl border border-indigo-100">
-              <p className="text-[11px] font-bold text-indigo-800 uppercase tracking-wider">My Rental Applications</p>
-              <p className="text-2xl font-black text-indigo-900 mt-1">1 Application</p>
-              <p className="text-[11px] text-indigo-700 mt-0.5">Under Landlord Review</p>
-            </div>
-            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-200">
-              <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Zero Fees Policy</p>
-              <p className="text-lg font-black text-gray-900 mt-1">$0 Inspection Fees Paid</p>
-              <p className="text-[11px] text-emerald-600 font-semibold mt-0.5">Scam-free protected</p>
-            </div>
-          </div>
-        )}
-
-        {/* 3. WORKSPACE TABS */}
-        <div className="max-w-7xl mx-auto flex items-center gap-3 mt-8 border-b border-gray-200 overflow-x-auto no-scrollbar">
-          {personaView === 'agent' ? (
+        {/* Dashboard Tabs */}
+        <div className="max-w-7xl mx-auto mt-6 flex flex-wrap gap-2 border-t border-gray-100 pt-4">
+          {isSeeker ? (
             <>
               <button
                 type="button"
                 onClick={() => setActiveTab('viewings')}
-                className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition flex items-center gap-2 whitespace-nowrap ${
-                  activeTab === 'viewings'
-                    ? 'border-emerald-600 text-emerald-700'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
+                className={`px-4 py-2 rounded-xl text-xs font-black transition ${
+                  activeTab === 'viewings' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                <span>Inbound Viewings</span>
-                {pendingCount > 0 && (
-                  <span className="w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-extrabold flex items-center justify-center">
-                    {pendingCount}
-                  </span>
-                )}
+                My Booked Viewings ({viewings.length})
               </button>
-
               <button
                 type="button"
                 onClick={() => setActiveTab('applications')}
-                className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition flex items-center gap-2 whitespace-nowrap ${
-                  activeTab === 'applications'
-                    ? 'border-emerald-600 text-emerald-700'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
+                className={`px-4 py-2 rounded-xl text-xs font-black transition ${
+                  activeTab === 'applications' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                <span>Offers &amp; Applications</span>
-                <span className="w-5 h-5 rounded-full bg-gray-200 text-gray-700 text-[10px] font-extrabold flex items-center justify-center">
-                  {applications.length}
-                </span>
+                Rental Applications & Leases ({applications.length + leases.length})
               </button>
-
               <button
                 type="button"
-                onClick={() => setActiveTab('listings')}
-                className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition whitespace-nowrap ${
-                  activeTab === 'listings'
-                    ? 'border-emerald-600 text-emerald-700'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
+                onClick={() => setActiveTab('offers')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition ${
+                  activeTab === 'offers' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                My Listed Properties ({properties.length})
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveTab('availability')}
-                className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition whitespace-nowrap ${
-                  activeTab === 'availability'
-                    ? 'border-emerald-600 text-emerald-700'
-                    : 'border-transparent text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                Viewing Schedule Availability
+                Purchase Offers & Deal Rooms ({offers.length})
               </button>
             </>
           ) : (
             <>
               <button
                 type="button"
-                onClick={() => setActiveTab('my_tours')}
-                className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition ${
-                  activeTab === 'my_tours' || activeTab === 'viewings'
-                    ? 'border-emerald-600 text-emerald-700'
-                    : 'border-transparent text-gray-500'
+                onClick={() => setActiveTab('viewings')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition ${
+                  activeTab === 'viewings' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                My Booked Viewings
+                Inbound Viewing Requests ({viewings.length})
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTab('my_offers')}
-                className={`pb-3 text-xs font-bold uppercase tracking-wider border-b-2 transition ${
-                  activeTab === 'my_offers'
-                    ? 'border-emerald-600 text-emerald-700'
-                    : 'border-transparent text-gray-500'
+                onClick={() => setActiveTab('applications')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition ${
+                  activeTab === 'applications' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                My Submitted Applications
+                Applications & Offers Queue ({applications.length + offers.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('listings')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition ${
+                  activeTab === 'listings' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                My Listings Portfolio ({listings.length})
               </button>
             </>
           )}
         </div>
-
-        {/* Persona requirements connected from src/user */}
-        <div className="max-w-7xl mx-auto mt-6 rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-wider text-indigo-700">Active user profile</p>
-              <h2 className="mt-1 text-sm font-black text-gray-900">{activePersona.label}</h2>
-              <p className="mt-1 text-xs text-gray-600">{activePersona.goal}</p>
-            </div>
-            <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-indigo-700">{activePersona.id}</span>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {activePersonaItems.slice(0, 5).map((item) => (
-              <span key={item} className="rounded-lg bg-white px-2.5 py-1.5 text-[11px] font-semibold text-gray-700 shadow-xs">
-                {item}
-              </span>
-            ))}
-          </div>
-          {personaView === 'agent' && (
-            <div className="mt-3 border-t border-indigo-100 pt-3 text-[11px] text-indigo-900">
-              Admin/Ops requirements are also defined for the platform: {adminOps.responsibilities.slice(0, 3).join(' · ')}.
-            </div>
-          )}
-        </div>
       </header>
 
-      {/* 4. TAB PANELS */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 flex-1 w-full">
-        {/* TAB: INBOUND VIEWING REQUESTS (Agent Dele & Mrs. Okafor) */}
-        {(activeTab === 'viewings' || activeTab === 'my_tours') && (
-          <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      {/* MAIN DASHBOARD CONTENT */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 flex-1">
+        {/* TAB 1: VIEWINGS */}
+        {activeTab === 'viewings' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-black text-gray-900">
-                  {personaView === 'agent' ? 'Scheduled Viewing Appointments' : 'Your Upcoming Tours'}
+                  {isSeeker ? 'My Scheduled Viewings' : 'Inbound Viewing Requests (Atomic Slots)'}
                 </h2>
                 <p className="text-xs text-gray-500">
-                  {personaView === 'agent'
-                    ? 'Qualified seekers who have selected automated viewing slots on your verified properties.'
-                    : 'Arrive at the property on time or join the video call via WhatsApp.'}
+                  {isSeeker
+                    ? 'Exact property unit addresses unlock automatically once confirmed by the lister.'
+                    : 'Approve or reschedule viewing appointments to unlock exact directions for verified seekers.'}
                 </p>
               </div>
-
-              {personaView === 'agent' && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-gray-500">Filter:</span>
-                  <div className="flex items-center bg-white border border-gray-300 rounded-xl p-0.5 text-xs font-semibold">
-                    <button
-                      type="button"
-                      onClick={() => setViewingFilter('all')}
-                      className={`px-3 py-1 rounded-lg transition ${
-                        viewingFilter === 'all' ? 'bg-gray-900 text-white' : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      All ({viewings.length})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setViewingFilter('pending')}
-                      className={`px-3 py-1 rounded-lg transition ${
-                        viewingFilter === 'pending' ? 'bg-amber-600 text-white' : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Pending ({pendingCount})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setViewingFilter('confirmed')}
-                      className={`px-3 py-1 rounded-lg transition ${
-                        viewingFilter === 'confirmed' ? 'bg-emerald-600 text-white' : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Confirmed
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Viewings List */}
-            <div className="space-y-4">
-              {filteredViewings.map((viewing) => (
-                <div
-                  key={viewing.id}
-                  className="bg-white rounded-3xl p-5 sm:p-6 border border-gray-200 shadow-sm hover:shadow-md transition flex flex-col lg:flex-row lg:items-center justify-between gap-6"
-                >
-                  {/* Left: Seeker details & Property snippet */}
-                  <div className="flex items-start gap-4">
-                    <img
-                      src={viewing.propertyImage}
-                      alt={viewing.propertyTitle}
-                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover shrink-0 border border-gray-100"
-                    />
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                          viewing.status === 'confirmed'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : viewing.status === 'pending'
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-gray-100 text-gray-700'
-                        }`}>
-                          {viewing.status === 'confirmed' ? '✓ Confirmed' : 'Action Required'}
-                        </span>
-                        <span className="text-xs font-bold text-gray-500">
-                          {viewing.viewingMode === 'in_person' ? '🚶 In-Person Walkthrough' : '📹 Live Video Tour'}
-                        </span>
+            <div className="grid gap-4 md:grid-cols-2">
+              {viewings.map((v) => {
+                const isConfirmed = v.status === 'confirmed';
+
+                return (
+                  <div key={v.id} className="bg-white rounded-3xl border border-gray-200 p-5 shadow-2xs space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex gap-3">
+                        <img
+                          src={v.image}
+                          alt={v.listingTitle}
+                          className="w-16 h-16 rounded-2xl object-cover shrink-0"
+                        />
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                                isConfirmed
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : v.status === 'cancelled'
+                                  ? 'bg-gray-100 text-gray-600'
+                                  : 'bg-amber-100 text-amber-800'
+                              }`}
+                            >
+                              {v.status}
+                            </span>
+                            <span className="text-xs font-bold text-gray-700">
+                              {v.viewingMode === 'virtual_video' ? '📹 Virtual Video' : '📍 In-Person'}
+                            </span>
+                          </div>
+                          <h3 className="text-sm font-black text-gray-900 mt-1 line-clamp-1">{v.listingTitle}</h3>
+                          <p className="text-xs font-bold text-emerald-700">{v.price}</p>
+                        </div>
                       </div>
-
-                      <h3 className="font-bold text-gray-900 text-sm sm:text-base">
-                        {viewing.seekerName}
-                      </h3>
-                      <p className="text-xs text-gray-500 font-medium">
-                        {viewing.seekerRole} · {viewing.seekerPhone} · {viewing.seekerEmail}
-                      </p>
-                      <p className="text-xs text-emerald-800 font-bold">
-                        Property: {viewing.propertyTitle} ({viewing.propertyPrice})
-                      </p>
-                      {viewing.notes && (
-                        <p className="text-xs text-gray-600 bg-gray-50 p-2.5 rounded-xl border border-gray-100 mt-2 max-w-xl italic">
-                          "{viewing.notes}"
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Right: Appointment Time Slot & Action Buttons */}
-                  <div className="flex flex-col sm:flex-row lg:flex-col items-start lg:items-end justify-between gap-4 shrink-0 border-t lg:border-t-0 pt-4 lg:pt-0 border-gray-100">
-                    <div className="text-left lg:text-right">
-                      <span className="block text-[11px] font-bold uppercase tracking-wider text-gray-400">
-                        Scheduled Slot
-                      </span>
-                      <p className="text-base font-extrabold text-gray-900">
-                        {viewing.date} @ {viewing.time}
-                      </p>
-                      <span className="text-[10px] text-emerald-600 font-bold">
-                        Zero Viewing Fee Verified
-                      </span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      {viewing.status === 'pending' && personaView === 'agent' && (
-                        <button
-                          type="button"
-                          onClick={() => handleConfirmViewing(viewing.id)}
-                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm"
-                        >
-                          Confirm Slot
-                        </button>
-                      )}
+                    <div className="p-3 bg-gray-50 rounded-2xl text-xs space-y-1">
+                      <p>
+                        <strong>Appointment:</strong> 📅 {v.date} @ {v.time}
+                      </p>
+                      <p>
+                        <strong>{isSeeker ? 'Lister' : 'Seeker'}:</strong>{' '}
+                        {isSeeker ? v.listerName : `${v.seekerName} (${v.seekerPhone})`}
+                      </p>
+                      {v.notes && <p className="text-gray-500 italic">"{v.notes}"</p>}
+                    </div>
 
+                    {/* Exact Address Privacy Section (PRD Section 5.3 & 7) */}
+                    <div
+                      className={`p-3 rounded-2xl border text-xs ${
+                        isConfirmed
+                          ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+                          : 'bg-gray-50 border-gray-200 text-gray-500'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-black text-[11px] uppercase tracking-wider">
+                          {isConfirmed ? '🔓 Exact Unit Address (Unlocked)' : '🔒 Exact Unit Address (Locked)'}
+                        </span>
+                        {isConfirmed && <span className="text-[10px] font-bold text-emerald-700">Directions Sent</span>}
+                      </div>
+                      <p className="mt-1 font-mono text-xs">
+                        {isConfirmed
+                          ? v.exactAddress
+                          : `${v.listingLocation} (Full street & unit revealed upon confirmation)`}
+                      </p>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex justify-between items-center pt-2 border-t border-gray-100">
                       <button
                         type="button"
-                        onClick={() => handleCancelViewing(viewing.id)}
-                        className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition"
+                        onClick={() => setActiveMessagingListingId(v.listingId)}
+                        className="text-xs font-bold text-emerald-700 hover:text-emerald-900 underline"
                       >
-                        Decline / Cancel
+                        💬 Open Chat
                       </button>
+
+                      {isLister && v.status === 'requested' && (
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleConfirmViewing(v.id)}
+                            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition"
+                          >
+                            Confirm & Release Address
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeclineViewing(v.id)}
+                            className="px-3 py-1.5 border border-gray-300 text-gray-700 rounded-xl text-xs font-bold"
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* TAB: APPLICATIONS & OFFERS (Viewing-to-Close Pipeline >15%) */}
-        {(activeTab === 'applications' || activeTab === 'my_offers') && (
-          <div>
-            <div className="mb-6">
+        {/* TAB 2: APPLICATIONS & DIGITAL LEASES (RENT PATH) */}
+        {activeTab === 'applications' && (
+          <div className="space-y-6">
+            <div>
               <h2 className="text-lg font-black text-gray-900">
-                {personaView === 'agent' ? 'Tenant Applications & Purchase Offers' : 'My Active Offers & Applications'}
+                {isSeeker ? 'My Rental Applications & Digital Leases' : 'Tenant Applications & Lease Workflow'}
               </h2>
               <p className="text-xs text-gray-500">
-                Structured transaction flow from verified viewing to signed agreement and move-in.
+                End-to-end rental execution: application review → digital lease agreement → Paystack / off-platform deposit payment.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6">
-              {applications.map((app) => (
-                <div
-                  key={app.id}
-                  className="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm flex flex-col md:flex-row justify-between gap-6"
-                >
-                  <div className="space-y-3 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                        app.type === 'rent_application' ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800'
-                      }`}>
-                        {app.type === 'rent_application' ? 'Rental Application' : 'Purchase Offer'}
-                      </span>
-                      <span className="text-xs font-bold text-gray-400">
-                        Submitted {app.submittedAt}
-                      </span>
+            {/* Applications Section */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-black text-gray-800 uppercase tracking-wider">
+                Submitted Applications ({applications.length})
+              </h3>
+              <div className="grid gap-4 md:grid-cols-2">
+                {applications.map((app) => (
+                  <div key={app.id} className="bg-white rounded-3xl border border-gray-200 p-5 shadow-2xs space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-indigo-100 text-indigo-800">
+                          {app.status}
+                        </span>
+                        <h4 className="text-sm font-black text-gray-900 mt-1">{app.listingTitle}</h4>
+                        <p className="text-xs text-gray-500">{app.listingLocation}</p>
+                      </div>
+                      <span className="text-xs font-bold text-gray-400">{app.submittedAt}</span>
                     </div>
 
-                    <div>
-                      <h3 className="text-base font-extrabold text-gray-900">{app.propertyTitle}</h3>
-                      <p className="text-xs text-gray-500">{app.propertyLocation}</p>
+                    <div className="p-3 bg-gray-50 rounded-2xl text-xs space-y-1 text-gray-700">
+                      <p><strong>Applicant:</strong> {app.applicantName} ({app.applicantPhone})</p>
+                      <p><strong>Employment:</strong> {app.employer} · {app.jobTitle}</p>
+                      <p><strong>Annual Income:</strong> {app.annualIncome}</p>
+                      <p><strong>Move-in Target:</strong> {app.moveInDate}</p>
+                      <p><strong>Guarantor:</strong> {app.guarantorName} ({app.guarantorPhone})</p>
                     </div>
 
-                    {/* Applicant details */}
-                    <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-1.5 text-xs text-gray-700">
-                      <p>
-                        <strong className="text-gray-900">Applicant:</strong> {app.applicantName} ({app.applicantPhone})
-                      </p>
-                      {app.employment && (
-                        <p>
-                          <strong className="text-gray-900">Employment / Credibility:</strong> {app.employment}
-                        </p>
-                      )}
-                      {app.annualIncome && (
-                        <p>
-                          <strong className="text-gray-900">Verified Income:</strong> {app.annualIncome}
-                        </p>
-                      )}
-                      {app.proposedMoveIn && (
-                        <p>
-                          <strong className="text-gray-900">Proposed Move-In Date:</strong> {app.proposedMoveIn} ({app.leaseDuration})
-                        </p>
-                      )}
-                      {app.financingMethod && (
-                        <p>
-                          <strong className="text-gray-900">Financing Method:</strong> {app.financingMethod}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Financial offer & Decision CTA */}
-                  <div className="flex flex-col justify-between items-start md:items-end gap-4 shrink-0 border-t md:border-t-0 pt-4 md:pt-0 border-gray-100">
-                    <div className="text-left md:text-right">
-                      <span className="block text-[11px] font-bold uppercase text-gray-400">Offered Terms</span>
-                      <p className="text-2xl font-black text-gray-900 mt-0.5">{app.proposedPrice}</p>
-                      {app.askingPrice && (
-                        <p className="text-xs text-gray-400 line-through">Asking: {app.askingPrice}</p>
-                      )}
-                      <span className={`inline-block mt-2 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-                        app.status === 'accepted' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
-                      }`}>
-                        {app.status === 'accepted' ? '✓ Accepted · Drafting Lease' : 'Under Review'}
-                      </span>
-                    </div>
-
-                    {personaView === 'agent' && app.status !== 'accepted' && (
-                      <div className="flex items-center gap-2">
+                    {/* Lister Action: Approve Application */}
+                    {isLister && app.status === 'under_review' && (
+                      <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
                         <button
                           type="button"
-                          onClick={() => handleAcceptApplication(app.id)}
-                          className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-sm active:scale-95"
+                          onClick={() => handleApproveApplication(app.id)}
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition"
                         >
-                          Accept &amp; Send Agreement
-                        </button>
-                        <button
-                          type="button"
-                          className="px-3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition"
-                        >
-                          Counter Offer
+                          Approve & Generate Digital Lease
                         </button>
                       </div>
                     )}
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            </div>
+
+            {/* Digital Leases Section */}
+            <div className="space-y-4 pt-4 border-t border-gray-200">
+              <h3 className="text-sm font-black text-emerald-800 uppercase tracking-wider">
+                Digital Leases & Signatures ({leases.length})
+              </h3>
+              <div className="grid gap-4 md:grid-cols-2">
+                {leases.map((lease) => {
+                  const isActive = lease.status === 'active';
+
+                  return (
+                    <div
+                      key={lease.id}
+                      className={`bg-white rounded-3xl border p-5 shadow-2xs space-y-3 ${
+                        isActive ? 'border-emerald-300 bg-emerald-50/20' : 'border-gray-200'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                              isActive ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                            }`}
+                          >
+                            {isActive ? 'Lease Active ✓' : 'Awaiting Tenant E-Signature'}
+                          </span>
+                          <h4 className="text-sm font-black text-gray-900 mt-1">{lease.listingTitle}</h4>
+                          <p className="text-xs text-gray-500">Term: {lease.leaseTerm}</p>
+                        </div>
+                        <span className="text-xs font-black text-gray-900">${lease.rentAmount}/mo</span>
+                      </div>
+
+                      <div className="p-3 bg-gray-50 rounded-2xl text-xs space-y-1">
+                        <p><strong>Tenant:</strong> {lease.tenantName}</p>
+                        <p><strong>Total Due at Signing:</strong> ${lease.totalDueAtSigning?.toLocaleString()}</p>
+                        <p>
+                          <strong>Landlord Signature:</strong>{' '}
+                          <span className="text-emerald-700 font-bold">Executed by {lease.landlordName}</span>
+                        </p>
+                        <p>
+                          <strong>Tenant Signature:</strong>{' '}
+                          {lease.tenantSigned ? (
+                            <span className="text-emerald-700 font-bold">Signed ({lease.tenantSignatureText})</span>
+                          ) : (
+                            <span className="text-amber-700 font-bold">Pending E-Signature</span>
+                          )}
+                        </p>
+                        {isActive && (
+                          <p className="text-emerald-800 font-bold">
+                            Payment: {lease.paymentMethod === 'off_platform' ? 'Marked Paid Off-Platform' : 'Paid via Paystack'} ({lease.paymentReference})
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Seeker Action: Sign & Pay */}
+                      {isSeeker && !lease.tenantSigned && (
+                        <div className="flex justify-end pt-2 border-t border-gray-100">
+                          <button
+                            type="button"
+                            onClick={() => setActiveLeaseModal(lease)}
+                            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition shadow-sm"
+                          >
+                            ✍️ Review & E-Sign Lease (Paystack / Off-Platform)
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
 
-        {/* TAB: MY LISTED PROPERTIES */}
-        {activeTab === 'listings' && personaView === 'agent' && (
-          <div>
-            <div className="flex items-center justify-between mb-6">
+        {/* TAB 3: PURCHASE OFFERS & DUE DILIGENCE (BUY PATH FOR TUNDE) */}
+        {activeTab === 'offers' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-lg font-black text-gray-900">Purchase Offers & Acquisition Deal Rooms</h2>
+              <p className="text-xs text-gray-500">
+                PRD Buy Flow 5.6: Formal offer submission → counter negotiation → 5-stage due diligence deal room & document vault.
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              {offers.map((offer) => {
+                const isAccepted = offer.status === 'accepted';
+                const ddRoom = dueDiligenceRooms.find((r) => r.offerId === offer.id);
+
+                return (
+                  <div key={offer.id} className="bg-white rounded-3xl border border-gray-200 p-5 shadow-2xs space-y-3">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                            isAccepted
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : offer.status === 'countered'
+                              ? 'bg-amber-100 text-amber-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}
+                        >
+                          {offer.status}
+                        </span>
+                        <h4 className="text-sm font-black text-gray-900 mt-1">{offer.listingTitle}</h4>
+                        <p className="text-xs text-gray-500">{offer.listingLocation}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-400">Asking: ${offer.askingPrice?.toLocaleString()}</p>
+                        <p className="text-sm font-black text-blue-700">Offer: ${offer.offerAmount?.toLocaleString()}</p>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-gray-50 rounded-2xl text-xs space-y-1">
+                      <p><strong>Buyer:</strong> {offer.buyerName} ({offer.buyerPhone})</p>
+                      <p><strong>Earnest Escrow:</strong> {offer.earnestDepositPercent}% (${offer.earnestDepositAmount?.toLocaleString()})</p>
+                      <p><strong>Financing:</strong> {offer.financingType}</p>
+                      <p><strong>Closing Window:</strong> {offer.closingTimelineDays} Days</p>
+                    </div>
+
+                    {/* Counter Offer History */}
+                    {offer.counterHistory?.length > 0 && (
+                      <div className="p-2.5 bg-gray-100 rounded-xl text-[11px] space-y-1 font-mono text-gray-700 max-h-24 overflow-y-auto">
+                        <p className="font-bold text-gray-900">Negotiation Trail:</p>
+                        {offer.counterHistory.map((h, i) => (
+                          <p key={i}>
+                            • [{h.sender.toUpperCase()}]: ${h.amount?.toLocaleString()} — {h.note}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                      <button
+                        type="button"
+                        onClick={() => setActiveMessagingListingId(offer.listingId)}
+                        className="text-xs font-bold text-blue-700 underline"
+                      >
+                        💬 Message Counterparty
+                      </button>
+
+                      {isAccepted && ddRoom && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveDueDiligenceModal(ddRoom)}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black transition shadow-sm"
+                        >
+                          🏛️ Enter 5-Stage Deal Room
+                        </button>
+                      )}
+
+                      {isLister && offer.status !== 'accepted' && (
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleAcceptOffer(offer.id)}
+                            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition"
+                          >
+                            Accept Offer
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleCounterOffer(offer.id)}
+                            className="px-3 py-1.5 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-black"
+                          >
+                            Counter
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: LISTER PORTFOLIO */}
+        {activeTab === 'listings' && isLister && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-black text-gray-900">Your Managed Properties</h2>
+                <h2 className="text-lg font-black text-gray-900">My Listings Portfolio</h2>
                 <p className="text-xs text-gray-500">
-                  All listings are physically inspected and title-verified before public display.
+                  Track verification status, public visibility, and inbound inquiries across your properties.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => onNavigate('create-listing')}
-                className="px-4 py-2 bg-gray-900 hover:bg-black text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition"
               >
-                <span>+ Add Property</span>
+                + Add Listing
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {properties.map((prop) => (
-                <div
-                  key={prop.id}
-                  className="bg-white rounded-3xl p-4 border border-gray-200 shadow-sm flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="relative aspect-[16/10] rounded-2xl overflow-hidden mb-3">
-                      <img
-                        src={prop.images[0]}
-                        alt={prop.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-black/60 backdrop-blur-md text-white">
-                        {prop.listingType === 'rent' ? 'Rent' : 'Sale'}
-                      </span>
-                      <span className="absolute top-2.5 right-2.5 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500 text-white">
-                        ✓ Verified Active
-                      </span>
+            <div className="grid gap-4 md:grid-cols-2">
+              {listings.map((p) => (
+                <div key={p.id} className="bg-white rounded-3xl border border-gray-200 p-5 shadow-2xs space-y-3">
+                  <div className="flex gap-3">
+                    <img
+                      src={p.images?.[0]}
+                      alt={p.title}
+                      className="w-20 h-20 rounded-2xl object-cover shrink-0"
+                    />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                            p.status === 'live'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-amber-100 text-amber-800'
+                          }`}
+                        >
+                          {p.status}
+                        </span>
+                        <span className="text-xs font-bold text-gray-500">
+                          {p.listingType === 'rent' ? 'Rental' : 'Sale'}
+                        </span>
+                      </div>
+                      <h4 className="text-sm font-black text-gray-900 mt-1 line-clamp-1">{p.title}</h4>
+                      <p className="text-xs font-black text-emerald-700">
+                        {formatPrice(p.price, p.listingType, p.tenure, currency)}
+                      </p>
+                      <p className="text-[11px] text-gray-400 mt-1">{p.location}</p>
                     </div>
-
-                    <h3 className="font-bold text-gray-900 text-sm truncate">{prop.title}</h3>
-                    <p className="text-xs text-gray-500">{prop.location}</p>
-                    <p className="text-base font-black text-gray-900 mt-2">
-                      {formatPrice(prop.price, prop.listingType, prop.tenure)}
-                    </p>
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between text-xs">
-                    <span className="text-gray-500">3 Inbound Requests</span>
+                  <div className="p-2.5 bg-gray-50 rounded-xl text-xs flex justify-between font-semibold text-gray-600">
+                    <span>Title: <strong>{p.titleStatus || 'Deed Registered'}</strong></span>
+                    <span>Views: <strong>{p.viewsCount || 142}</strong></span>
+                    <span>Inquiries: <strong>{p.inquiriesCount || 12}</strong></span>
+                  </div>
+
+                  <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
                     <button
                       type="button"
-                      onClick={() => onNavigate('property-detail', { id: prop.id, property: prop })}
-                      className="font-bold text-emerald-600 hover:underline"
+                      onClick={() => onNavigate('property-detail', { property: p })}
+                      className="text-xs font-bold text-gray-700 hover:text-gray-900 underline"
                     >
-                      View Live Page →
+                      View Marketplace Page →
                     </button>
                   </div>
                 </div>
@@ -621,47 +637,34 @@ export default function DashboardPage({
             </div>
           </div>
         )}
-
-        {/* TAB: VIEWING AVAILABILITY CONFIGURATION */}
-        {activeTab === 'availability' && personaView === 'agent' && (
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200 shadow-sm max-w-2xl">
-            <h2 className="text-lg font-black text-gray-900">Manage Default Viewing Slots</h2>
-            <p className="text-xs text-gray-500 mt-1 mb-6">
-              Set the days and time windows when you or your on-site caretaker are available for in-person or live video tours.
-            </p>
-
-            <div className="space-y-4">
-              {[
-                { day: 'Tuesdays & Thursdays', times: '02:00 PM – 05:00 PM', active: true },
-                { day: 'Saturdays (Open House Window)', times: '10:00 AM – 04:00 PM', active: true },
-                { day: 'Sundays', times: '12:00 PM – 03:00 PM', active: false },
-              ].map((slot, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 rounded-2xl border border-gray-200">
-                  <div>
-                    <p className="text-xs font-bold text-gray-900">{slot.day}</p>
-                    <p className="text-xs text-gray-500">{slot.times}</p>
-                  </div>
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
-                    slot.active ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-100 text-gray-500'
-                  }`}>
-                    {slot.active ? 'Active' : 'Paused'}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-gray-100 flex justify-end">
-              <button
-                type="button"
-                onClick={() => showAlert('Viewing schedule updated successfully.')}
-                className="px-5 py-2.5 bg-gray-900 hover:bg-black text-white text-xs font-bold rounded-xl transition"
-              >
-                Save Availability
-              </button>
-            </div>
-          </div>
-        )}
       </main>
+
+      {/* Digital Lease Modal */}
+      {activeLeaseModal && (
+        <DigitalLeaseModal
+          lease={activeLeaseModal}
+          onClose={() => setActiveLeaseModal(null)}
+          onSuccess={() => {
+            setActiveLeaseModal(null);
+            showAlert('Lease signed and payment processed successfully!');
+          }}
+        />
+      )}
+
+      {/* Due Diligence Modal */}
+      {activeDueDiligenceModal && (
+        <DueDiligenceModal
+          room={activeDueDiligenceModal}
+          onClose={() => setActiveDueDiligenceModal(null)}
+        />
+      )}
+
+      {/* In-App Messaging Drawer */}
+      <MessagingDrawer
+        isOpen={Boolean(activeMessagingListingId)}
+        onClose={() => setActiveMessagingListingId(null)}
+        defaultListingId={activeMessagingListingId}
+      />
     </div>
   );
 }

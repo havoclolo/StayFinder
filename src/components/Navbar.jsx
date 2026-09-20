@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useCurrency } from '../context/CurrencyContext';
 
 /**
  * StayFinder Navbar Component (Real Estate Edition)
@@ -20,13 +21,14 @@ export default function Navbar({
   activePage = 'home',
   unreadNotifications = 2,
   savedCount = 0,
+  onOpenMessages = () => {},
 }) {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState('USD');
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [scrolled, setScrolled] = useState(false);
+  const { currency: selectedCurrency, setCurrency } = useCurrency();
 
   const profileMenuRef = useRef(null);
   const mobileMenuRef = useRef(null);
@@ -162,17 +164,43 @@ export default function Navbar({
 
             {/* 3. RIGHT NAVIGATION & USER PROFILE MENU */}
             <div className="flex items-center gap-2">
-              {/* Landlord & Agent CTA */}
+              {/* Property Lister CTA */}
+              {user?.role === 'lister' && (
+                <button
+                  type="button"
+                  onClick={() => handleNav('create-listing')}
+                  className="hidden lg:inline-flex items-center gap-1.5 px-4 py-2 text-xs font-extrabold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition duration-150"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>List Property</span>
+                </button>
+              )}
+
+              {/* In-App Messages Drawer Button */}
               <button
                 type="button"
-                onClick={() => handleNav('create-listing')}
-                className="hidden lg:inline-flex items-center gap-1.5 px-4 py-2 text-xs font-extrabold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-xl transition duration-150"
+                onClick={onOpenMessages}
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition relative"
+                aria-label="Messages"
+                title="In-App Messages & Activity"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-                </svg>
-                <span>List Property</span>
+                <span className="text-base">💬</span>
+                <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full" />
               </button>
+
+              {/* Admin Ops Link */}
+              {user?.role === 'admin' && (
+                <button
+                  type="button"
+                  onClick={() => handleNav('admin')}
+                  className="hidden md:inline-flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition"
+                  title="Admin Verification & Moderation Queue"
+                >
+                  <span>🛡️ Ops</span>
+                </button>
+              )}
 
               {/* Currency & Language Button */}
               <button
@@ -239,7 +267,8 @@ export default function Navbar({
                         </div>
 
                         {/* Seeker Actions */}
-                        <div className="py-1">
+                        {user.role === 'seeker' && (
+                          <div className="py-1">
                           <button
                             type="button"
                             onClick={() => handleNav('dashboard', { tab: 'viewings' })}
@@ -267,10 +296,12 @@ export default function Navbar({
                             <span>Saved Properties</span>
                             {savedCount > 0 && <span className="text-gray-400 text-[11px]">{savedCount}</span>}
                           </button>
-                        </div>
+                          </div>
+                        )}
 
-                        {/* Landlord / Agent Tools */}
-                        <div className="border-t border-gray-100 py-1">
+                        {/* Property Lister Tools */}
+                        {user.role === 'lister' && (
+                          <div className="border-t border-gray-100 py-1">
                           <button
                             type="button"
                             onClick={() => handleNav('dashboard', { tab: 'manage-listings' })}
@@ -291,7 +322,11 @@ export default function Navbar({
                             <span>Create New Property Listing</span>
                           </button>
 
-                          {user.role === 'admin' && (
+                          </div>
+                        )}
+
+                        {user.role === 'admin' && (
+                          <div className="border-t border-gray-100 py-1">
                             <button
                               type="button"
                               onClick={() => handleNav('admin')}
@@ -302,8 +337,8 @@ export default function Navbar({
                               </svg>
                               <span>Admin Verification Queue</span>
                             </button>
-                          )}
-                        </div>
+                          </div>
+                        )}
 
                         {/* Logout */}
                         <div className="border-t border-gray-100 py-1">
@@ -353,7 +388,11 @@ export default function Navbar({
 
                         <button
                           type="button"
-                          onClick={() => handleNav('create-listing')}
+                          onClick={() => {
+                            setIsProfileMenuOpen(false);
+                            if (onSignup) onSignup();
+                            else handleNav('login', { mode: 'signup' });
+                          }}
                           className="w-full text-left px-4 py-2.5 text-xs font-bold text-emerald-700 hover:bg-emerald-50"
                         >
                           List a Property for Rent / Sale
@@ -418,7 +457,15 @@ export default function Navbar({
 
               <button
                 type="button"
-                onClick={() => handleNav('create-listing')}
+                onClick={() => {
+                  if (user?.role === 'lister') {
+                    handleNav('create-listing');
+                  } else if (onSignup) {
+                    onSignup();
+                  } else {
+                    handleNav('login', { mode: 'signup' });
+                  }
+                }}
                 className="w-full text-left px-3 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-50 rounded-lg"
               >
                 + List Property (Landlords &amp; Agents)
@@ -448,7 +495,7 @@ export default function Navbar({
                   key={curr.code}
                   type="button"
                   onClick={() => {
-                    setSelectedCurrency(curr.code);
+                    setCurrency(curr.code);
                     setIsLanguageModalOpen(false);
                   }}
                   className={`p-3 rounded-2xl border text-left transition ${
