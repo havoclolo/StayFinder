@@ -17,6 +17,7 @@ import { useCurrency } from '../context/CurrencyContext';
  * - Landlord / Agent listing acquisition CTA
  */
 export default function HomePage({
+  isAuthenticated = false,
   onNavigate = () => {},
   onSelectProperty = () => {},
   onSearch = () => {},
@@ -87,6 +88,11 @@ export default function HomePage({
   }, [listingMode, verifiedOnly, selectedPropertyType, locationQuery, selectedBedrooms, maxBudget]);
 
   const handleFavoriteToggle = (id, isLiked) => {
+    if (!isAuthenticated) {
+      onNavigate('login', { mode: 'login' });
+      return;
+    }
+
     setFavorites((prev) => {
       const next = new Set(prev);
       if (isLiked) next.add(id);
@@ -104,7 +110,24 @@ export default function HomePage({
       bedrooms: selectedBedrooms,
       maxBudget,
     };
+
+    if (!isAuthenticated) {
+      onNavigate('login', {
+        mode: 'login',
+        returnTo: { page: 'search', data: queryPayload },
+      });
+      return;
+    }
+
     if (onSearch) onSearch(queryPayload);
+  };
+
+  const handleProtectedHomeAction = (callback, returnTo = null) => {
+    if (!isAuthenticated) {
+      onNavigate('login', { mode: 'login', returnTo });
+      return;
+    }
+    callback();
   };
 
   const handleResetFilters = () => {
@@ -372,7 +395,10 @@ export default function HomePage({
             </button>
             <button
               type="button"
-              onClick={() => onNavigate('search', { mode: listingMode })}
+              onClick={() => handleProtectedHomeAction(
+                () => onNavigate('search', { mode: listingMode }),
+                { page: 'search', data: { mode: listingMode } },
+              )}
               className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-xl text-xs font-bold transition"
             >
               Explore Map View 🗺️
@@ -406,13 +432,22 @@ export default function HomePage({
               <PropertyCard
                 key={property.id}
                 property={property}
+                isAuthenticated={isAuthenticated}
                 isFavorite={favorites.has(property.id)}
                 onToggleFavorite={handleFavoriteToggle}
-                onQuickView={setQuickViewProperty}
-                onBookViewing={setBookingSlotProperty}
+                onQuickView={(property) => handleProtectedHomeAction(
+                  () => setQuickViewProperty(property),
+                  null,
+                )}
+                onBookViewing={(property) => handleProtectedHomeAction(
+                  () => setBookingSlotProperty(property),
+                  null,
+                )}
                 onSelect={(id, prop) => {
-                  if (onSelectProperty) onSelectProperty(id, prop);
-                  else if (onNavigate) onNavigate('property-detail', { id, property: prop });
+                  handleProtectedHomeAction(() => {
+                    if (onSelectProperty) onSelectProperty(id, prop);
+                    else if (onNavigate) onNavigate('property-detail', { id, property: prop });
+                  }, { page: 'property-detail', data: { id, property: prop } });
                 }}
               />
             ))}
@@ -446,8 +481,9 @@ export default function HomePage({
           onClose={() => setQuickViewProperty(null)}
           onViewDetails={(id, prop) => {
             setQuickViewProperty(null);
-            if (onSelectProperty) onSelectProperty(id, prop);
-            else if (onNavigate) onNavigate('property-detail', { id, property: prop });
+            handleProtectedHomeAction(() => {
+              onNavigate('property-detail', { id, property: prop });
+            }, { page: 'property-detail', data: { id, property: prop } });
           }}
         />
       )}

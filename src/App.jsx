@@ -18,33 +18,40 @@ function StayFinderApp() {
   const { user: currentUser, logout } = useAuth();
 
   useEffect(() => {
-    if (!currentUser) return undefined;
-
-    if (currentUser.role === 'admin' && activePage === 'home') {
-      setActivePage('admin');
-    } else if (currentUser.role === 'lister' && activePage === 'home') {
-      setActivePage('dashboard');
-      setNavigationData({ tab: 'listings' });
+    if (!window.history.state?.stayFinderPage) {
+      window.history.replaceState(
+        { stayFinderPage: activePage, navigationData },
+        '',
+        window.location.href,
+      );
     }
 
-    window.history.pushState({ stayFinderHome: true }, '', window.location.href);
+    const handleBrowserBack = (event) => {
+      const nextPage = event.state?.stayFinderPage || 'home';
+      const nextData = event.state?.navigationData || null;
+      const needsAuthentication = ['search', 'property-detail'].includes(nextPage);
 
-    const handleBrowserBack = () => {
-      logout();
-      setActivePage('login');
-      setNavigationData(null);
+      if (needsAuthentication && !currentUser) {
+        setActivePage('login');
+        setNavigationData({ mode: 'login' });
+        return;
+      }
+
+      setActivePage(nextPage);
+      setNavigationData(nextData);
     };
 
     window.addEventListener('popstate', handleBrowserBack);
     return () => window.removeEventListener('popstate', handleBrowserBack);
-  }, [currentUser, activePage, logout]);
+  }, [activePage, currentUser, navigationData]);
 
   const handleNavigate = (page, data = null) => {
     const roleLandingPage = currentUser?.role === 'admin' ? 'admin' : 'dashboard';
     const roleLandingData = currentUser?.role === 'lister' ? { tab: 'listings' } : null;
-    const canBrowseMarketplace = !currentUser || currentUser.role === 'seeker';
+    const canBrowseMarketplace = currentUser?.role === 'seeker';
     const canAccess =
-      ((page === 'home' || page === 'search' || page === 'property-detail') && canBrowseMarketplace) ||
+      (page === 'home' && (!currentUser || ['seeker', 'lister', 'admin'].includes(currentUser.role))) ||
+      ((page === 'search' || page === 'property-detail') && canBrowseMarketplace) ||
       page === 'login' ||
       (page === 'dashboard' && ['seeker', 'lister'].includes(currentUser?.role)) ||
       (page === 'create-listing' && currentUser?.role === 'lister') ||
@@ -56,24 +63,35 @@ function StayFinderApp() {
       return;
     }
 
-    console.log(`Navigating to: ${page}`, data);
+    const replaceHistory = Boolean(data?.replaceHistory);
+    const nextData = data?.replaceHistory ? { ...data, replaceHistory: undefined } : data;
+    console.log(`Navigating to: ${page}`, nextData);
+    const historyState = {
+      stayFinderPage: page,
+      navigationData: nextData,
+    };
+    window.history[replaceHistory ? 'replaceState' : 'pushState'](
+      historyState,
+      '',
+      window.location.href,
+    );
     setActivePage(page);
-    setNavigationData(data);
+    setNavigationData(nextData);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleLogout = () => {
     logout();
-    setActivePage('login');
+    window.history.pushState(
+      { stayFinderPage: 'home', navigationData: null },
+      '',
+      window.location.href,
+    );
+    setActivePage('home');
     setNavigationData(null);
   };
 
-  const renderedPage =
-    currentUser?.role === 'admin' && ['home', 'search', 'property-detail'].includes(activePage)
-      ? 'admin'
-      : currentUser?.role === 'lister' && ['home', 'search', 'property-detail'].includes(activePage)
-        ? 'dashboard'
-        : activePage;
+  const renderedPage = activePage;
   const renderedNavigationData =
     renderedPage === 'dashboard' && currentUser?.role === 'lister'
       ? { tab: 'listings' }
@@ -90,7 +108,10 @@ function StayFinderApp() {
           onSignup={() => handleNavigate('login', { mode: 'signup' })}
           onLogout={handleLogout}
           onSearchClick={() => handleNavigate('search')}
-          onOpenMessages={() => setGlobalMessagingOpen(true)}
+          onOpenMessages={() => {
+            if (currentUser) setGlobalMessagingOpen(true);
+            else handleNavigate('login', { mode: 'login' });
+          }}
           unreadNotifications={2}
           savedCount={3}
         />
@@ -99,6 +120,7 @@ function StayFinderApp() {
       <main className="flex-1">
         {renderedPage === 'home' && (
           <HomePage
+            isAuthenticated={Boolean(currentUser)}
             onNavigate={handleNavigate}
             onSelectProperty={(id, property) => handleNavigate('property-detail', { id, property })}
             onSearch={(searchParams) => handleNavigate('search', searchParams)}
@@ -116,6 +138,7 @@ function StayFinderApp() {
         {renderedPage === 'login' && (
           <LoginPage
             initialMode={renderedNavigationData?.mode || 'login'}
+            returnTo={renderedNavigationData?.returnTo}
             onNavigate={handleNavigate}
           />
         )}
@@ -132,6 +155,7 @@ function StayFinderApp() {
           <PropertyDetailPage
             property={navigationData?.property}
             openBooking={navigationData?.openBooking}
+            isAuthenticated={Boolean(currentUser)}
             onNavigate={handleNavigate}
           />
         )}

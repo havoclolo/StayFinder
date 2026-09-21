@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
-export default function LoginPage({ onNavigate = () => {}, initialMode = 'login' }) {
+export default function LoginPage({ onNavigate = () => {}, initialMode = 'login', returnTo = null }) {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,7 +27,10 @@ export default function LoginPage({ onNavigate = () => {}, initialMode = 'login'
       } else if (authenticatedUser.role === 'lister') {
         onNavigate('dashboard', { tab: 'listings' });
       } else {
-        onNavigate('home');
+        onNavigate(returnTo?.page || 'home', {
+          ...(returnTo?.data || {}),
+          replaceHistory: true,
+        });
       }
     } catch (submitError) {
       setError(submitError.message);

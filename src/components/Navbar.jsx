@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useCurrency } from '../context/CurrencyContext';
+import Logo from './Logo';
 
 /**
  * StayFinder Navbar Component (Real Estate Edition)
@@ -111,28 +112,7 @@ export default function Navbar({
                 className="flex items-center gap-2.5 group focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-xl py-1 px-1 transition"
                 aria-label="StayFinder Home"
               >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-cyan-500 flex items-center justify-center text-white shadow-md shadow-emerald-500/20 group-hover:scale-105 transition-transform">
-                  <svg
-                    className="w-6 h-6"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                    <polyline points="9 22 9 12 15 12 15 22" />
-                  </svg>
-                </div>
-                <div className="text-left">
-                  <span className="text-xl font-black tracking-tight text-gray-900 bg-gradient-to-r from-emerald-700 via-teal-700 to-gray-900 bg-clip-text text-transparent block leading-tight">
-                    StayFinder
-                  </span>
-                  <span className="hidden sm:block text-[9px] font-extrabold uppercase tracking-widest text-emerald-700">
-                    Verified Property Marketplace
-                  </span>
-                </div>
+                <Logo />
               </button>
             </div>
 

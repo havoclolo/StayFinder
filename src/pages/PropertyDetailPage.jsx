@@ -13,6 +13,7 @@ import { marketplaceStore } from '../services/marketplaceStore';
 export default function PropertyDetailPage({
   property: suppliedProperty,
   openBooking = false,
+  isAuthenticated = false,
   onNavigate = () => {},
 }) {
   const { currency } = useCurrency();
@@ -37,29 +38,32 @@ export default function PropertyDetailPage({
     setTimeout(() => setAlertNotice(''), 4000);
   };
 
+  const requireAccount = (callback) => {
+    if (!isAuthenticated) {
+      onNavigate('login', {
+        mode: 'login',
+        returnTo: { page: 'property-detail', data: { property } },
+      });
+      return;
+    }
+    callback();
+  };
+
   return (
     <main className="min-h-screen bg-gray-50 px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        {/* Navigation breadcrumb */}
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => onNavigate('search', { mode: property.listingType })}
-            className="text-xs font-bold text-gray-600 hover:text-gray-900 underline"
-          >
-            ← Back to search results
-          </button>
+        <div className="flex items-center justify-end">
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setFraudModalOpen(true)}
+              onClick={() => requireAccount(() => setFraudModalOpen(true))}
               className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-200"
             >
               <span>🛡️</span> Report Listing / Fraud
             </button>
             <button
               type="button"
-              onClick={() => setReviewModalOpen(true)}
+              onClick={() => requireAccount(() => setReviewModalOpen(true))}
               className="text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200"
             >
               ★ Leave Review
@@ -234,7 +238,7 @@ export default function PropertyDetailPage({
             {/* Action 1: Schedule Free Viewing */}
             <button
               type="button"
-              onClick={() => setBookingOpen(true)}
+              onClick={() => requireAccount(() => setBookingOpen(true))}
               className="w-full rounded-xl bg-emerald-600 px-4 py-3 text-xs font-black text-white hover:bg-emerald-700 transition shadow-sm"
             >
               📅 Schedule Free Viewing (Pick Slot)
@@ -244,7 +248,7 @@ export default function PropertyDetailPage({
             {isRent ? (
               <button
                 type="button"
-                onClick={() => setApplicationModalOpen(true)}
+                onClick={() => requireAccount(() => setApplicationModalOpen(true))}
                 className="w-full rounded-xl bg-gray-900 px-4 py-3 text-xs font-black text-white hover:bg-black transition"
               >
                 📝 Start Rental Application (Amaka Flow)
@@ -252,7 +256,7 @@ export default function PropertyDetailPage({
             ) : (
               <button
                 type="button"
-                onClick={() => setOfferModalOpen(true)}
+                onClick={() => requireAccount(() => setOfferModalOpen(true))}
                 className="w-full rounded-xl bg-blue-600 px-4 py-3 text-xs font-black text-white hover:bg-blue-700 transition"
               >
                 💼 Submit Formal Purchase Offer (Tunde Flow)
@@ -262,7 +266,7 @@ export default function PropertyDetailPage({
             {/* Action 3: Message Lister Drawer */}
             <button
               type="button"
-              onClick={() => setMessagingOpen(true)}
+              onClick={() => requireAccount(() => setMessagingOpen(true))}
               className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-xs font-bold text-gray-700 hover:bg-gray-50 transition"
             >
               💬 Inquire / Message Lister

@@ -17,6 +17,7 @@ export default function PropertyCard({
   onBookViewing = () => {},
   onToggleFavorite = () => {},
   isFavorite = false,
+  isAuthenticated = false,
 }) {
   const { currency } = useCurrency();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -100,6 +101,7 @@ export default function PropertyCard({
           type="button"
           onClick={handleFavoriteClick}
           aria-label={isLiked ? 'Remove from saved' : 'Save property'}
+          title={isAuthenticated ? (isLiked ? 'Remove from saved' : 'Save property') : 'Sign in to save property'}
           className={`absolute top-2.5 right-2.5 z-20 p-2 rounded-full hover:scale-110 active:scale-95 transition-all text-white hover:bg-black/10 focus:outline-none ${
             isAnimatingHeart ? 'animate-heart-pop' : ''
           }`}
@@ -122,26 +124,26 @@ export default function PropertyCard({
 
         {/* Quick Action Overlay (Book Viewing) */}
         <div className="absolute inset-x-0 bottom-3 flex justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20 pointer-events-none">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onBookViewing(property);
-            }}
-            className="pointer-events-auto px-3.5 py-1.5 bg-gray-900/90 hover:bg-black text-white text-[11px] font-bold rounded-full shadow-lg backdrop-blur-sm transition active:scale-95"
-          >
-            📅 Schedule Viewing
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuickView(property);
-            }}
-            className="pointer-events-auto px-3 py-1.5 bg-white/95 hover:bg-white text-gray-900 text-[11px] font-bold rounded-full shadow-lg backdrop-blur-sm transition"
-          >
-            Quick View
-          </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onBookViewing(property);
+              }}
+              className="pointer-events-auto px-3.5 py-1.5 bg-gray-900/90 hover:bg-black text-white text-[11px] font-bold rounded-full shadow-lg backdrop-blur-sm transition active:scale-95"
+            >
+              📅 Schedule Viewing
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onQuickView(property);
+              }}
+              className="pointer-events-auto px-3 py-1.5 bg-white/95 hover:bg-white text-gray-900 text-[11px] font-bold rounded-full shadow-lg backdrop-blur-sm transition"
+            >
+              Quick View
+            </button>
         </div>
 
         {/* Left & Right Slider Controls */}

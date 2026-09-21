@@ -87,8 +87,13 @@ export async function loginUser({ email, password, role = null }) {
 }
 
 export function getStoredUser() {
-  window.localStorage.removeItem(STORAGE_KEY);
-  return null;
+  try {
+    const storedUser = window.localStorage.getItem(STORAGE_KEY);
+    return storedUser ? JSON.parse(storedUser) : null;
+  } catch {
+    window.localStorage.removeItem(STORAGE_KEY);
+    return null;
+  }
 }
 
 export function logoutUser() {

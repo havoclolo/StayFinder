@@ -140,7 +140,7 @@ export default function QuickViewModal({
                 }}
                 className="px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition shadow-md shadow-rose-500/20 active:scale-95"
               >
-                View Full Details
+                Schedule Viewing
               </button>
             </div>
           </div>
