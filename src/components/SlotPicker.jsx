@@ -84,7 +84,7 @@ export default function SlotPicker({
     <div className="bg-white rounded-3xl p-6 sm:p-8 border border-gray-100 shadow-xl max-w-lg w-full text-left">
       <div className="flex items-center justify-between pb-4 border-b border-gray-100">
         <div>
-          <span className="text-[10px] font-extrabold uppercase tracking-wider text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full">
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full">
             Verified Viewing Scheduler
           </span>
           <h3 className="text-lg font-black text-gray-900 mt-1">Book a Verified Viewing</h3>
@@ -176,7 +176,7 @@ export default function SlotPicker({
                   onClick={() => setSelectedTime(time)}
                   className={`py-2 px-3 rounded-xl border text-center text-xs font-semibold transition ${
                     selectedTime === time
-                      ? 'border-rose-600 bg-rose-50 text-rose-700 ring-1 ring-rose-600'
+                      ? 'border-emerald-600 bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600'
                       : 'border-gray-200 text-gray-700 hover:border-gray-300'
                   }`}
                 >
@@ -236,7 +236,7 @@ export default function SlotPicker({
 
           <button
             type="submit"
-            className="flex-1 py-3 px-6 bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white text-xs font-extrabold rounded-xl transition shadow-md shadow-rose-500/20 active:scale-95"
+            className="flex-1 py-3 px-6 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white text-xs font-extrabold rounded-xl transition shadow-md shadow-emerald-500/20 active:scale-95"
           >
             Confirm Viewing Appointment
           </button>

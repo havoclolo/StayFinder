@@ -56,7 +56,7 @@ export default function PropertyCard({
   return (
     <div
       onClick={() => onSelect(property.id, property)}
-      className="group flex flex-col cursor-pointer transition duration-300 text-left focus:outline-none focus:ring-2 focus:ring-rose-500 rounded-3xl p-1 bg-white border border-transparent hover:border-gray-200"
+      className="group flex flex-col cursor-pointer transition duration-300 text-left focus:outline-none focus:ring-2 focus:ring-emerald-500 rounded-3xl p-1 bg-white border border-transparent hover:border-gray-200"
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
@@ -184,7 +184,7 @@ export default function PropertyCard({
           </span>
         </div>
 
-        <h3 className="font-bold text-gray-900 text-sm truncate group-hover:text-rose-600 transition-colors">
+        <h3 className="font-bold text-gray-900 text-sm truncate group-hover:text-emerald-700 transition-colors">
           {property.title}
         </h3>
 
