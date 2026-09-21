@@ -65,7 +65,7 @@ export default function PersonaSwitcher({ onNavigate = () => {} }) {
               }
             }}
             title="Reset LocalStorage Data"
-            className="ml-2 px-2 py-1 bg-gray-800 hover:bg-rose-900 text-gray-300 hover:text-white rounded-lg text-[10px] font-bold transition border border-gray-700"
+            className="ml-2 px-2 py-1 bg-gray-800 hover:bg-emerald-900 text-gray-300 hover:text-white rounded-lg text-[10px] font-bold transition border border-gray-700"
           >
             ↺ Reset Storage
           </button>

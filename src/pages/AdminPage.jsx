@@ -69,7 +69,7 @@ export default function AdminPage({ onNavigate = () => {} }) {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 pb-6">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-black uppercase tracking-wider text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200">
+              <span className="text-[11px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
                 PRD Module 5.11 · Trust, Safety & Operations Center
               </span>
               <span className="text-xs font-bold text-gray-500">SLA: &lt;6 hours</span>
@@ -119,10 +119,10 @@ export default function AdminPage({ onNavigate = () => {} }) {
             <span className="text-[10px] text-amber-700 font-bold">Requires document review</span>
           </div>
 
-          <div className="rounded-2xl border border-rose-200 bg-rose-50/50 p-4 shadow-2xs">
-            <p className="text-[10px] font-black uppercase text-rose-700">Fraud & Scam Reports</p>
-            <p className="mt-1 text-2xl font-black text-rose-900">{openFraudReports.length}</p>
-            <span className="text-[10px] text-rose-700 font-bold">Target: &lt; 0.5% fraud rate</span>
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4 shadow-2xs">
+            <p className="text-[10px] font-black uppercase text-emerald-700">Fraud & Scam Reports</p>
+            <p className="mt-1 text-2xl font-black text-emerald-900">{openFraudReports.length}</p>
+            <span className="text-[10px] text-emerald-700 font-bold">Target: &lt; 0.5% fraud rate</span>
           </div>
 
           <div className="rounded-2xl border border-indigo-200 bg-indigo-50/50 p-4 shadow-2xs">
@@ -161,7 +161,7 @@ export default function AdminPage({ onNavigate = () => {} }) {
             onClick={() => setActiveTab('fraud')}
             className={`px-4 py-2 rounded-xl text-xs font-black transition ${
               activeTab === 'fraud'
-                ? 'bg-rose-600 text-white'
+                ? 'bg-emerald-600 text-white'
                 : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
             }`}
           >
@@ -272,17 +272,17 @@ export default function AdminPage({ onNavigate = () => {} }) {
         {activeTab === 'fraud' && (
           <div className="mt-6 space-y-4">
             {fraudReports.map((report) => (
-              <div key={report.id} className="bg-white rounded-3xl border border-rose-200 p-6 shadow-sm flex flex-col md:flex-row justify-between gap-4">
+              <div key={report.id} className="bg-white rounded-3xl border border-emerald-200 p-6 shadow-sm flex flex-col md:flex-row justify-between gap-4">
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-rose-100 text-rose-800">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800">
                       {report.priority} Priority
                     </span>
                     <span className="text-xs font-bold text-gray-500">{report.date}</span>
                     <span className="text-xs text-gray-400">· Reported by: {report.reportedBy}</span>
                   </div>
                   <h3 className="text-base font-black text-gray-900">{report.reason}</h3>
-                  <p className="text-xs text-gray-700 bg-rose-50/50 p-3 rounded-xl border border-rose-100">{report.detail}</p>
+                  <p className="text-xs text-gray-700 bg-emerald-50/50 p-3 rounded-xl border border-emerald-100">{report.detail}</p>
                   <p className="text-xs text-gray-500">Target: <strong>{report.listingTitle}</strong></p>
                 </div>
 
@@ -290,7 +290,7 @@ export default function AdminPage({ onNavigate = () => {} }) {
                   <button
                     type="button"
                     onClick={() => handleResolveFraud(report.id, 'suspend')}
-                    className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold"
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold"
                   >
                     Suspend Listing & Warn Lister
                   </button>

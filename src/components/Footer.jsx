@@ -207,7 +207,7 @@ export default function Footer({
                 </a>
               </li>
               <li>
-                <a href="#anti-fraud" className="text-rose-400 font-bold hover:underline flex items-center gap-1">
+                <a href="#anti-fraud" className="text-emerald-400 font-bold hover:underline flex items-center gap-1">
                   <span>Report Fraudulent Agent / Ad</span>
                 </a>
               </li>

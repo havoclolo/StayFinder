@@ -109,7 +109,7 @@ export default function PropertyCard({
           <svg
             className={`w-6 h-6 transition-colors duration-200 ${
               isLiked
-                ? 'fill-rose-500 stroke-rose-500 drop-shadow-md'
+                ? 'fill-emerald-500 stroke-emerald-500 drop-shadow-md'
                 : 'fill-black/30 stroke-white stroke-[2.2]'
             }`}
             viewBox="0 0 24 24"

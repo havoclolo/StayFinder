@@ -57,7 +57,7 @@ export default function PropertyDetailPage({
             <button
               type="button"
               onClick={() => requireAccount(() => setFraudModalOpen(true))}
-              className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 bg-rose-50 px-3 py-1.5 rounded-xl border border-rose-200"
+              className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200"
             >
               <span>🛡️</span> Report Listing / Fraud
             </button>

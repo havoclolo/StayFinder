@@ -131,7 +131,7 @@ export default function LoginPage({ onNavigate = () => {}, initialMode = 'login'
               </div>
 
               {error && (
-                <p role="alert" className="rounded-xl bg-red-50 p-2.5 text-xs font-semibold text-red-700">
+                <p role="alert" className="rounded-xl bg-emerald-50 p-2.5 text-xs font-semibold text-emerald-700">
                   {error}
                 </p>
               )}

@@ -42,7 +42,7 @@ export default function FraudReportModal({ listing, onClose, onSuccess }) {
       <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 sm:p-8 border border-gray-100 animate-fadeIn">
         <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
           <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center font-black text-sm">
+            <span className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-sm">
               🛡️
             </span>
             <div>
@@ -61,7 +61,7 @@ export default function FraudReportModal({ listing, onClose, onSuccess }) {
 
         {isSuccess ? (
           <div className="py-8 text-center space-y-2">
-            <div className="w-12 h-12 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto text-xl font-black">
+            <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-xl font-black">
               ✓
             </div>
             <h4 className="text-base font-black text-gray-900">Report Dispatched to Ops</h4>
@@ -71,7 +71,7 @@ export default function FraudReportModal({ listing, onClose, onSuccess }) {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="p-3 bg-rose-50 rounded-xl text-xs text-rose-900">
+            <div className="p-3 bg-emerald-50 rounded-xl text-xs text-emerald-900">
               <strong>Zero Tolerance Policy:</strong> StayFinder strictly prohibits upfront inspection fees. Legitimate viewings are always free.
             </div>
 
@@ -110,7 +110,7 @@ export default function FraudReportModal({ listing, onClose, onSuccess }) {
                     onClick={() => setPriority(p)}
                     className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition ${
                       priority === p
-                        ? 'bg-rose-600 text-white border-rose-600'
+                        ? 'bg-emerald-600 text-white border-emerald-600'
                         : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
                     }`}
                   >
@@ -131,7 +131,7 @@ export default function FraudReportModal({ listing, onClose, onSuccess }) {
               <button
                 type="submit"
                 disabled={submitting || !detail.trim()}
-                className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-black transition disabled:opacity-50"
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black transition disabled:opacity-50"
               >
                 {submitting ? 'Submitting...' : 'Submit Fraud Report'}
               </button>

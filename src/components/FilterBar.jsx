@@ -259,7 +259,7 @@ export default function FilterBar({
                 onClick={onToggleTaxes}
                 aria-label="Toggle tax calculation"
                 className={`w-9 h-5 flex items-center rounded-full p-0.5 transition duration-300 ${
-                  showTaxes ? 'bg-rose-500' : 'bg-gray-300'
+                  showTaxes ? 'bg-emerald-500' : 'bg-gray-300'
                 }`}
               >
                 <div
@@ -450,7 +450,7 @@ export default function FilterBar({
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="text-xs font-bold text-gray-900 underline hover:text-rose-600 transition"
+                className="text-xs font-bold text-gray-900 underline hover:text-emerald-600 transition"
               >
                 Clear all
               </button>

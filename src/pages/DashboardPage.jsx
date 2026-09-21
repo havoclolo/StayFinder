@@ -137,7 +137,7 @@ export default function DashboardPage({
               <button
                 type="button"
                 onClick={() => onNavigate('admin')}
-                className="rounded-xl bg-rose-600 px-4 py-2 text-xs font-black text-white hover:bg-rose-700 shadow-sm"
+                className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white hover:bg-emerald-700 shadow-sm"
               >
                 Trust & Ops Center
               </button>
