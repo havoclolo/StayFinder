@@ -472,36 +472,6 @@ export default function HomePage({
           </div>
         )}
 
-        {/* 5. LANDLORD & AGENT CALLOUT (PRD: Property owners/agents efficient listing) */}
-        <div className="mt-16 rounded-3xl overflow-hidden bg-gradient-to-r from-gray-900 via-gray-950 to-slate-900 text-white p-8 sm:p-12 shadow-xl border border-gray-800">
-          <div className="max-w-2xl">
-            <span className="text-[11px] font-extrabold uppercase tracking-widest text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-500/20">
-              For Landlords, Sellers & Certified Agents
-            </span>
-            <h3 className="text-2xl sm:text-3xl font-black mt-3 tracking-tight">
-              List once. Reach serious, verified seekers without WhatsApp chaos.
-            </h3>
-            <p className="mt-3 text-xs sm:text-sm text-gray-300 leading-relaxed">
-              Stop answering endless unfiltered messages from unqualified leads. Manage scheduled viewings, review digital tenant/buyer applications, and close deals securely on StayFinder.
-            </p>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={() => onNavigate('create-listing')}
-                className="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-gray-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-emerald-500/20 active:scale-95"
-              >
-                List Your Property
-              </button>
-              <button
-                type="button"
-                onClick={() => onNavigate('dashboard')}
-                className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl transition border border-white/20"
-              >
-                Agent / Host Dashboard
-              </button>
-            </div>
-          </div>
-        </div>
       </main>
 
       {/* 6. SLOT PICKER VIEWING MODAL */}
