@@ -3,6 +3,7 @@ import PropertyCard from '../components/PropertyCard';
 import SlotPicker from '../components/SlotPicker';
 import QuickViewModal from '../components/QuickViewModal';
 import Footer from '../components/Footer';
+import PropertyTrackerWidget from '../components/PropertyTrackerWidget';
 import { PROPERTY_TYPES } from '../utils/constants';
 import { marketplaceStore } from '../services/marketplaceStore';
 import { useCurrency } from '../context/CurrencyContext';
@@ -43,13 +44,52 @@ export default function HomePage({
 }) {
   const { currency } = useCurrency();
   const [properties, setProperties] = useState(() => marketplaceStore.getListings());
+  const [currentUser, setCurrentUser] = useState(() => marketplaceStore.getCurrentUser());
+  const [viewings, setViewings] = useState(() => marketplaceStore.getViewings());
+  const [applications, setApplications] = useState(() => marketplaceStore.getApplications());
+  const [offers, setOffers] = useState(() => marketplaceStore.getOffers());
+  const [leases, setLeases] = useState(() => marketplaceStore.getLeases());
 
   useEffect(() => {
     const unsub = marketplaceStore.subscribe(() => {
       setProperties(marketplaceStore.getListings());
+      setCurrentUser(marketplaceStore.getCurrentUser());
+      setViewings(marketplaceStore.getViewings());
+      setApplications(marketplaceStore.getApplications());
+      setOffers(marketplaceStore.getOffers());
+      setLeases(marketplaceStore.getLeases());
     });
     return unsub;
   }, []);
+
+  // Track if current authenticated user is a seeker who has actually started to buy or rent a house
+  const hasActiveSeekerDeals = useMemo(() => {
+    if (!isAuthenticated || !currentUser || currentUser.role !== 'seeker') return false;
+    const userEmail = (currentUser.email || '').toLowerCase().trim();
+    const userId = currentUser.id;
+    const userName = (currentUser.name || '').toLowerCase().trim();
+
+    const isUserMatch = (recordEmail, recordUserId, recordName) => {
+      const e = (recordEmail || '').toLowerCase().trim();
+      if (userEmail && e && userEmail === e) return true;
+      if (userId && recordUserId && userId === recordUserId) return true;
+      if (userEmail === 'amaka.nwosu@stayfinder.ng' || userId === 'user-seeker' || userId === 'user-amaka') {
+        if (e === 'amaka.nwosu@stayfinder.ng' || recordUserId === 'user-amaka' || recordUserId === 'user-seeker') return true;
+      }
+      if (userEmail === 'tunde.b@stayfinder.ng' || userId === 'user-tunde') {
+        if (e === 'tunde.b@stayfinder.ng' || recordUserId === 'user-tunde') return true;
+      }
+      const n = (recordName || '').toLowerCase().trim();
+      if (userName && n && userName === n) return true;
+      return false;
+    };
+
+    const hasApp = applications.some((a) => isUserMatch(a.applicantEmail, a.seekerId, a.applicantName));
+    const hasOffer = offers.some((o) => isUserMatch(o.buyerEmail, o.buyerId, o.buyerName));
+    const hasViewing = viewings.some((v) => isUserMatch(v.seekerEmail, v.seekerId, v.seekerName));
+
+    return hasApp || hasOffer || hasViewing;
+  }, [isAuthenticated, currentUser, applications, offers, viewings]);
 
   // Search Mode: 'rent' | 'buy'
   const [listingMode, setListingMode] = useState('rent');
@@ -325,6 +365,15 @@ export default function HomePage({
               <div className="flex flex-wrap items-center gap-2 text-gray-500 text-[11px]">
                 <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-bold text-emerald-700">₦0 viewing fees</span>
                 <span className="rounded-full bg-gray-100 px-2.5 py-1 font-bold text-gray-600">Direct verified contacts</span>
+                {hasActiveSeekerDeals && (
+                  <a
+                    href="#property-tracker"
+                    className="rounded-full bg-emerald-600 hover:bg-emerald-700 px-3 py-1 font-bold text-white transition flex items-center gap-1 shadow-xs"
+                  >
+                    <span>📍 Track Rent / Buy Progress</span>
+                    <span>↓</span>
+                  </a>
+                )}
               </div>
             </div>
           </div>
@@ -383,6 +432,28 @@ export default function HomePage({
           </div>
         </div>
       </section>
+
+      {/* 2.5 LIVE DEALS & APPLICATION PROGRESS TRACKER (Only for seekers with active deals) */}
+      {hasActiveSeekerDeals && (
+        <div id="property-tracker">
+          <PropertyTrackerWidget
+            currentUser={currentUser}
+            viewings={viewings}
+            applications={applications}
+            offers={offers}
+            leases={leases}
+            currency={currency}
+            onNavigate={onNavigate}
+            onSelectProperty={(id) => {
+              const prop = properties.find((p) => p.id === id);
+              handleProtectedHomeAction(() => {
+                if (onSelectProperty) onSelectProperty(id, prop);
+                else if (onNavigate) onNavigate('property-detail', { id, property: prop });
+              }, { page: 'property-detail', data: { id, property: prop } });
+            }}
+          />
+        </div>
+      )}
 
       {/* 3. PROPERTY MARKETPLACE CATALOG */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10">

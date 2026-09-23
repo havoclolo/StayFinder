@@ -5,7 +5,7 @@ export default function LoginPage({ onNavigate = () => {}, initialMode = 'login'
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('seeker'); // 'seeker' | 'lister' | 'admin'
+  const [role, setRole] = useState('seeker'); // 'seeker' | 'lister'
   const [mode, setMode] = useState(initialMode);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -82,11 +82,10 @@ export default function LoginPage({ onNavigate = () => {}, initialMode = 'login'
             {mode === 'signup' && (
               <div className="mt-4">
                 <label className="block text-xs font-bold text-gray-700 mb-1">Select Primary Role</label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {[
                     { id: 'seeker', label: 'Property Seeker' },
                     { id: 'lister', label: 'Property Lister' },
-                    { id: 'admin', label: 'Admin' },
                   ].map((r) => (
                     <button
                       key={r.id}

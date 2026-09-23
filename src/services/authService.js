@@ -27,10 +27,11 @@ function resolveRoleFromEmail(email, explicitRole = null) {
 
   if (knownRoles[normalizedEmail]) return knownRoles[normalizedEmail];
 
-  const role = normalizeRoleName(explicitRole);
-  if (role === 'seeker' || role === 'lister' || role === 'admin') return role;
+  if (explicitRole) {
+    const role = normalizeRoleName(explicitRole);
+    if (role === 'seeker' || role === 'lister') return role;
+  }
 
-  if (normalizedEmail.includes('admin') || normalizedEmail.includes('ops')) return 'admin';
   if (
     normalizedEmail.includes('okafor') ||
     normalizedEmail.includes('dele') ||
@@ -56,26 +57,40 @@ export async function loginUser({ email, password, role = null }) {
     throw new Error('Your password must contain at least 6 characters.');
   }
 
+  if (role) {
+    const normalizedRole = normalizeRoleName(role);
+    if (normalizedRole === 'admin') {
+      throw new Error('Signing up as an administrator is not permitted.');
+    }
+  }
+
   const resolvedRole = resolveRoleFromEmail(normalizedEmail, role);
   const safeRole = resolvedRole === 'landlord' || resolvedRole === 'agent' ? 'lister' : resolvedRole;
   let matchedUser = PRESET_USERS[safeRole];
 
-  if (!normalizedEmail.includes('amaka') && !normalizedEmail.includes('tunde') && !normalizedEmail.includes('okafor') && !normalizedEmail.includes('dele') && !normalizedEmail.includes('admin') && !normalizedEmail.includes('ops')) {
+  const presetEmails = [
+    'amaka.nwosu@stayfinder.ng',
+    'tunde.b@stayfinder.ng',
+    'folake.okafor@stayfinder.ng',
+    'dele.alabi@stayfinder.ng',
+    'ops@stayfinder.ng',
+  ];
+
+  if (!presetEmails.includes(normalizedEmail)) {
     const namePart = normalizedEmail.split('@')[0].replace(/[._-]/g, ' ');
+    const accountRole = safeRole === 'lister' ? 'lister' : 'seeker';
     matchedUser = {
-      ...(safeRole === 'admin' ? PRESET_USERS.admin : safeRole === 'lister' ? PRESET_USERS.lister : PRESET_USERS.seeker),
+      ...(accountRole === 'lister' ? PRESET_USERS.lister : PRESET_USERS.seeker),
       id: `user-${Date.now()}`,
       name: namePart.split(' ').map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1)).join(' '),
       email: normalizedEmail,
       phone: '+234 800 000 0000',
-      role: safeRole,
-      personaType: safeRole === 'admin' ? 'admin' : safeRole === 'lister' ? 'property_lister' : 'property_seeker',
+      role: accountRole,
+      personaType: accountRole === 'lister' ? 'property_lister' : 'property_seeker',
       headline:
-        safeRole === 'admin'
-          ? 'Admin Console Access'
-          : safeRole === 'lister'
-            ? 'Property Lister (Custom Account)'
-            : 'Property Seeker (Custom Account)',
+        accountRole === 'lister'
+          ? 'Property Lister (Custom Account)'
+          : 'Property Seeker (Custom Account)',
       verifiedKYC: true,
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=120&h=120&q=80',
     };
