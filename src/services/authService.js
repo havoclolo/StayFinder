@@ -103,14 +103,18 @@ export async function loginUser({ email, password, role = null }) {
 
 export function getStoredUser() {
   try {
-    const storedUser = window.localStorage.getItem(STORAGE_KEY);
-    return storedUser ? JSON.parse(storedUser) : null;
-  } catch {
     window.localStorage.removeItem(STORAGE_KEY);
-    return null;
+  } catch {
+    // Ignore storage errors in non-browser environments
   }
+  return null;
 }
 
 export function logoutUser() {
-  window.localStorage.removeItem(STORAGE_KEY);
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Ignore storage errors in non-browser environments
+  }
+  marketplaceStore.setCurrentUser(null);
 }

@@ -455,12 +455,24 @@ class MarketplaceStore {
 
   // --- CURRENT USER & PERSONA SWITCHING ---
   getCurrentUser() {
-    const saved = loadFromStorage(STORAGE_KEYS.ACTIVE_USER, null);
-    return saved || null;
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEYS.ACTIVE_USER);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
   }
 
   setCurrentUser(user) {
-    saveToStorage(STORAGE_KEYS.ACTIVE_USER, user);
+    try {
+      if (user) {
+        window.localStorage.setItem(STORAGE_KEYS.ACTIVE_USER, JSON.stringify(user));
+      } else {
+        window.localStorage.removeItem(STORAGE_KEYS.ACTIVE_USER);
+      }
+    } catch (err) {
+      console.error('Error updating active user storage:', err);
+    }
     this.notify();
   }
 
