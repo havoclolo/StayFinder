@@ -65,7 +65,6 @@ function StayFinderApp() {
 
     const replaceHistory = Boolean(data?.replaceHistory);
     const nextData = data?.replaceHistory ? { ...data, replaceHistory: undefined } : data;
-    console.log(`Navigating to: ${page}`, nextData);
     const historyState = {
       stayFinderPage: page,
       navigationData: nextData,

@@ -480,8 +480,7 @@ export default function HomePage({
           <SlotPicker
             property={bookingSlotProperty}
             onCancel={() => setBookingSlotProperty(null)}
-            onBookingConfirmed={(booking) => {
-              console.log('Viewing booked successfully:', booking);
+            onBookingConfirmed={() => {
               setTimeout(() => {
                 setBookingSlotProperty(null);
               }, 1500);
